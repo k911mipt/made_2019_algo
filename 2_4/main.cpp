@@ -2,60 +2,57 @@
 #include <fstream>
 #include <algorithm>
 
-inline void incModal(int* &cur, int* &left, int* &right) {
-    if (++cur == right)
-        cur = left;
-}
+namespace made {
 
-inline int findMaximum(int* &skippedCur, int* &left, int* &right) {
-    int maximum;
-    if (skippedCur == left) {
-        maximum = *(left + 1);
-    } else {
-        maximum = *left;
-    }
-    for (int* p = left + 1; p < skippedCur; p++)
-        if (maximum < *p)
-            maximum = *p;
-    for (int* p = skippedCur + 1; p < right; p++)
-        if (maximum < *p)
-            maximum = *p;
-    return maximum;
-}
-
-void solveWithQueue(const int &n, int* &arr, const int &windowSize) {
-    int* left = arr;
-    int* right = arr + windowSize;
-    int* next = right;
-    int* last = arr + n;
-    int maximum = std::max(*left, findMaximum(left, left, right));
-    std::cout << maximum << " ";
-    int* cur = left;
-    while (next < last) {
-        if (*next >= maximum) {
-            maximum = *next;
-        } else if (maximum == *cur) {
-            maximum = std::max(*next, findMaximum(cur, left, right));
+    inline int findMaximum(int* left, int* right) {
+        int maximum = *(left);
+        for (; left < right; left++) {
+            maximum = std::max(maximum, *left);
         }
-        *cur = *next;
-        std::cout << maximum << " ";
-        incModal(cur, left, right);
-        next++;
+        return maximum;
     }
-}
 
-void solve(const int n, int* arr, const int windowSize) {
-    if (windowSize == 1) {
-        for (int* p = arr; p < arr + n; p++) {
-            std::cout << *p << " ";
-        }
-    } else {
-        solveWithQueue(n, arr, windowSize);
+    void solveWithQueue(const int n, int* arr, const int windowSize, int* answers) {
+        int* left = arr;
+        int* right = arr + windowSize;
+        int* last = arr + n;
+        int maximum = findMaximum(left, right);
+        *answers = maximum;
+        while (right < last) {
+            if (*right >= maximum) {
+                maximum = *right;
+                left++;
+                right++;
+            }
+            else if (maximum == *left) {
+                left++;
+                right++;
+                maximum = findMaximum(left, right);
+            }
+            else if (maximum > *left) {
+                left++;
+                right++;
+            }
+            answers++;
+            *answers = maximum;
+        } 
     }
-    delete arr;
+
+    void solve(const int n, int* arr, const int windowSize, int* answers) {
+        if (windowSize > 1) {
+            solveWithQueue(n, arr, windowSize, answers);
+        }
+        else {
+            // Direct solution
+            for (int i = 0; i <= n - windowSize; i++, arr++, answers++) {
+                *answers = *arr;
+            }
+        }
+    }
 }
 
 int main() {
+    // load data
     std::ifstream in("input.txt");
     std::cin.rdbuf(in.rdbuf());
     int n;
@@ -66,6 +63,18 @@ int main() {
     }
     int windowSize;
     std::cin >> windowSize;
-    solve(n, arr, windowSize);
+    
+    // solving
+    int answersSize = n - windowSize + 1;
+    int* answers = new int[answersSize];
+    made::solve(n, arr, windowSize, answers);
+
+    //output
+    for (int i = 0; i < answersSize; i++) {
+        std::cout << answers[i] << " ";
+    }
+
+    delete answers;
+    delete arr;
     return EXIT_SUCCESS;
 }
