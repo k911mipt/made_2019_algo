@@ -32,24 +32,19 @@ void solveWithQueue(const int &n, int* &arr, const int &windowSize) {
     std::cout << maximum << " ";
     int* cur = left;
     while (next < last) {
-        if (maximum == *cur) {
-            maximum = findMaximum(cur, left, right);
+        if (*next >= maximum) {
+            maximum = *next;
+        } else if (maximum == *cur) {
+            maximum = std::max(*next, findMaximum(cur, left, right));
         }
         *cur = *next;
-        maximum = std::max(*cur, maximum);
         std::cout << maximum << " ";
         incModal(cur, left, right);
         next++;
     }
 }
 
-void solve(int n) {
-    int* arr = new int[n];
-    for (int i = 0; i < n; i++) {
-        std::cin >> arr[i];
-    }
-    int windowSize;
-    std::cin >> windowSize;
+void solve(const int n, int* arr, const int windowSize) {
     if (windowSize == 1) {
         for (int* p = arr; p < arr + n; p++) {
             std::cout << *p << " ";
@@ -65,6 +60,12 @@ int main() {
     std::cin.rdbuf(in.rdbuf());
     int n;
     std::cin >> n;
-    solve(n);
+    int* arr = new int[n];
+    for (int i = 0; i < n; i++) {
+        std::cin >> arr[i];
+    }
+    int windowSize;
+    std::cin >> windowSize;
+    solve(n, arr, windowSize);
     return EXIT_SUCCESS;
 }
