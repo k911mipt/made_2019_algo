@@ -1,19 +1,6 @@
-﻿#ifdef WINDOWS
-#define _CRTDBG_MAP_ALLOC
-#include <stdlib.h>
-#include <crtdbg.h>
-#endif
-
-#include <iostream>
+﻿#include <iostream>
 #include <fstream>
 #include <vector>
-
-#ifdef TEST
-#include <algorithm>
-#include <cassert>
-#endif
-
-
 
 namespace made {
 
@@ -99,45 +86,6 @@ namespace made {
         };
     }
 
-#ifdef TEST
-    namespace sortSolution {
-
-        void Eat(int &n, int *&arr, const int weightCapacity) {
-            int numFruits = 0;
-            int gatheredWeight = 0;
-            while ((gatheredWeight <= weightCapacity) && (numFruits <= n)) {
-                gatheredWeight += arr[numFruits];
-                numFruits++;
-            }
-            numFruits--;
-            std::sort(arr, arr + numFruits);
-            int* cur = arr;
-            for (int i = 0; i < numFruits; i++) {
-                if (arr[i] == 1) {
-                    cur++;
-                }
-                else {
-                    arr[i] /= 2;
-                }
-            }
-            n -= cur - arr;
-            arr = cur;
-        }
-
-        int Solve(int n, int *arr, const int weightCapacity) {
-            int numOperations = 0;
-            while (n > 0) {
-                std::sort(arr, arr + n, std::greater<int>());
-                Eat(n, arr, weightCapacity);
-                numOperations++;
-            }
-
-            return numOperations;
-        }
-
-    }
-#endif
-
     namespace solution {
 
         using stl::PriorityQueue;
@@ -166,8 +114,8 @@ namespace made {
             }
         }
 
-        int Solve(size_type n, int *arr, const int weight_limit) {
-            PriorityQueue<int> pq(arr, arr + n);
+        int Solve(int *arr, const size_type arr_length, const int weight_limit) {
+            PriorityQueue<int> pq(arr, arr + arr_length);
             int numOperations = 0;
             while (pq.Size() > 0) {
                 Eat(pq, weight_limit);
@@ -179,43 +127,19 @@ namespace made {
 
 }
 
-using namespace made;
-
-#ifdef TEST
-void runTests(const stl::size_type n, int *arr, const int weightCapacity, int answer) {
-    int *copy = new int[n];
-    std::copy(arr, arr + n, copy);
-    int naiveAnswer = sortSolution::Solve(n, copy, weightCapacity);
-    assert((naiveAnswer == answer));
-    delete[] copy;
-}
-#endif
-
 int main() {
-#ifdef WINDOWS
-    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-    _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
-    _CrtSetReportFile(_CRT_WARN, _CRTDBG_FILE_STDOUT);
-#endif // WINDOWS
-    // load data
-    std::ifstream in("input.txt");
-    std::cin.rdbuf(in.rdbuf());
-    int n;
-    std::cin >> n;
-    int *arr = new int[n];
-    for (int i = 0; i < n; i++) {
+    std::ifstream input_stream("input.txt");
+    std::cin.rdbuf(input_stream.rdbuf());
+    int basket_size;
+    std::cin >> basket_size;
+    int *arr = new int[basket_size];
+    for (int i = 0; i < basket_size; i++) {
         std::cin >> arr[i];
     }
     int weight_limit;
     std::cin >> weight_limit;
-    // solve
-    int answer = solution::Solve(n, arr, weight_limit);
-#ifdef TEST
-    runTests(n, arr, weight_limit, answer);
-#endif
-    // output
+    int answer = made::solution::Solve(arr, basket_size, weight_limit);
     std::cout << answer << std::endl;
-    // clean and exit;
     delete arr;
     return EXIT_SUCCESS;
 }
