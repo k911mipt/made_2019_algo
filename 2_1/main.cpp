@@ -6,22 +6,25 @@
 
 #include <iostream>
 #include <fstream>
+#include <vector>
+
+#ifdef TEST
 #include <algorithm>
 #include <cassert>
-#include <vector>
-#include <queue>
-#include <valarray>
+#endif
+
+
 
 namespace made {
 
     namespace stl {
+
         using std::vector;
         using std::less;
-        ///*typedef size_t size_type;*/
-        typedef int size_type;
+        typedef size_t size_type;
 
         template <class PtrLike, class Comparator = less<>>
-        void siftDown(PtrLike begin, PtrLike end, size_type i, Comparator comparator = Comparator()) {
+        void SiftDown(PtrLike begin, PtrLike end, size_type i, Comparator comparator = Comparator()) {
             int left = i * 2 + 1;
             int right = left + 1;
             int heap_size = end - begin;
@@ -34,27 +37,27 @@ namespace made {
             }
             if (best_index != i) {
                 std::swap(begin[i], begin[best_index]);
-                siftDown(begin, end, best_index);
+                SiftDown(begin, end, best_index);
             }
         }
 
         template <class PtrLike, class Comparator = less<>>
-        void heapify(PtrLike begin, PtrLike end, Comparator comparator = Comparator()) {
+        void Heapify(PtrLike begin, PtrLike end, Comparator comparator = Comparator()) {
             int length = end - begin;
             for (int i = (length - 1) / 2; i >= 0; i--) {
-                siftDown(begin, end, i, comparator);
+                SiftDown(begin, end, i, comparator);
             }
         }
 
         template <class PtrLike, class Comparator = less<>>
-        void popHeap(PtrLike begin, PtrLike end, Comparator comparator = Comparator()) {
+        void PopHeap(PtrLike begin, PtrLike end, Comparator comparator = Comparator()) {
             end--;
             std::swap(*begin, *end);
-            siftDown(begin, end, 0, comparator);
+            SiftDown(begin, end, 0, comparator);
         }
 
         template <class PtrLike, class Comparator = less<>>
-        void pushHeap(PtrLike begin, PtrLike end, Comparator comparator = Comparator()) {
+        void PushHeap(PtrLike begin, PtrLike end, Comparator comparator = Comparator()) {
             int i = end - begin - 1;
             while (comparator(begin[(i - 1) / 2], begin[i])) {
                 std::swap(begin[i], begin[(i - 1) / 2]);
@@ -68,83 +71,38 @@ namespace made {
             class PriorityQueue
         {
         private:
-            Container _buffer;
-            Comparator _comparator;
+            Container buffer_;
+            Comparator comparator_;
         public:
             PriorityQueue() = default;
             template <class PtrLike>
-            PriorityQueue(PtrLike begin, PtrLike end) : _buffer(begin, end), _comparator() {
-                heapify(_buffer.begin(), _buffer.end(), _comparator);
+            PriorityQueue(PtrLike begin, PtrLike end) : buffer_(begin, end), comparator_() {
+                Heapify(buffer_.begin(), buffer_.end(), comparator_);
             }
+
             ~PriorityQueue() = default;
 
-            void push(T value) {
-                _buffer.push_back(value);
-                pushHeap(_buffer.begin(), _buffer.end(), _comparator);
+            inline void Push(T value) {
+                buffer_.push_back(value);
+                PushHeap(buffer_.begin(), buffer_.end(), comparator_);
             }
-            void pop() {
-                popHeap(_buffer.begin(), _buffer.end(), _comparator);
-                _buffer.pop_back();
+            inline void Pop() {
+                PopHeap(buffer_.begin(), buffer_.end(), comparator_);
+                buffer_.pop_back();
             }
-            T top() {
-                return _buffer.front();
+            inline T Top() {
+                return buffer_.front();
             }
-            int size() {
-                return _buffer.size();
+            inline int Size() {
+                return buffer_.size();
             }
         };
     }
 
-    namespace queueSolution {
-        inline int findMaximum(int* left, int* right) {
-            int maximum = *(left);
-            for (; left < right; left++) {
-                maximum = std::max(maximum, *left);
-            }
-            return maximum;
-        }
-
-        void solveWithQueue(const int n, int* arr, const int windowSize, int* answers) {
-            int* left = arr;
-            int* right = arr + windowSize;
-            int* last = arr + n;
-            int maximum = findMaximum(left, right);
-            *answers = maximum;
-            while (right < last) {
-                if (*right >= maximum) {
-                    maximum = *right;
-                    left++;
-                    right++;
-                }
-                else if (maximum == *left) {
-                    left++;
-                    right++;
-                    maximum = findMaximum(left, right);
-                }
-                else if (maximum > *left) {
-                    left++;
-                    right++;
-                }
-                answers++;
-                *answers = maximum;
-            }
-        }
-
-        void solve(const int n, int* arr, const int windowSize, int* answers) {
-            if (windowSize > 1) {
-                solveWithQueue(n, arr, windowSize, answers);
-            }
-            else {
-                // Direct solution
-                for (int i = 0; i <= n - windowSize; i++, arr++, answers++) {
-                    *answers = *arr;
-                }
-            }
-        }
-    }
-
+#ifdef TEST
     namespace sortSolution {
-        void eat(int &n, int* &arr, const int weightCapacity) {
+
+        void Eat(int &n, int *&arr, const int weightCapacity) {
             int numFruits = 0;
             int gatheredWeight = 0;
             while ((gatheredWeight <= weightCapacity) && (numFruits <= n)) {
@@ -166,145 +124,37 @@ namespace made {
             arr = cur;
         }
 
-        int solve(int n, int* arr, const int weightCapacity) {
-            //std::sort(arr, arr + n, greater<int>());
+        int Solve(int n, int *arr, const int weightCapacity) {
             int numOperations = 0;
             while (n > 0) {
                 std::sort(arr, arr + n, std::greater<int>());
-                eat(n, arr, weightCapacity);
+                Eat(n, arr, weightCapacity);
                 numOperations++;
             }
 
-
             return numOperations;
         }
+
     }
+#endif
 
-    namespace heapVectorSolution {
-        void eat(std::vector<int> &vec, const int weightCapacity) {
-            int numFruits = 0;
-            int gatheredWeight = 0;
-            std::vector<int> takenFruits;
-            while ((gatheredWeight <= weightCapacity) && (numFruits < vec.size())) {
-                int fruit = vec.front();
-                gatheredWeight += fruit;
-                if (gatheredWeight <= weightCapacity) {
-                    std::pop_heap(vec.begin(), vec.end());
-                    vec.pop_back();
-                    int eaten = fruit / 2;
-                    if (eaten) {
-                        takenFruits.push_back(eaten);
-                    }
-                }
-            };
+    namespace solution {
 
-            for (auto fruit : takenFruits) {
-                vec.push_back(fruit);
-                std::push_heap(vec.begin(), vec.end());
-            }
-        }
-        int solve(int n, int* arr, const int weightCapacity) {
-            std::vector<int> vec(arr, arr + n);
-            std::make_heap(arr, arr + n);
-            std::make_heap(vec.begin(), vec.end());
-
-            int *copy = new int[n];
-            std::copy(arr, arr + n, copy);
-            //stl::heapify(copy, copy + n);
-            std::vector<int> vec2(copy, copy + n);
-
-            int *copy2 = new int[n];
-            std::copy(copy, copy + n, copy2);
-            //{ //std::pop_heap
-            //int temp = *copy2;
-            //*copy2 = *(copy2 + n - 1);
-            //*(copy2 + n - 1) = temp;
-            //stl::heapify(copy2, copy2 + n - 1, 0);
-            //stl::popHeap(copy2, copy2 + n);
-            //stl::heapify(copy2, copy2 + n - 1,)
-            //}
-            std::vector<int> vec3(copy2, copy2 + n);
-
-            //stl::make_heap(copy + 1, copy + n);
-            //std::vector<int> vec3(copy + 1, copy + n);
-            std::pop_heap(vec.begin(), vec.end());
-            //stl::make_heap(vec.begin(), vec.end());
-
-            //stl::pushHeap(copy2, copy2 + n);
-            //std::push_heap(copy2, copy2 + n);
-            //stl::heapify(copy2, copy2 + n, 0);
-            std::vector<int> vec4(copy2, copy2 + n);
-
-
-            int numOperations = 0;
-            while (vec.size() > 0) {
-                eat(vec, weightCapacity);
-                numOperations++;
-            }
-            //std::make_heap(arr, arr + n);
-            return numOperations;
-        }
-    }
-
-    namespace heapSolution {
-        using std::priority_queue;
-        using std::vector;
-        typedef stl::size_type size_type;
-        using std::greater;
-        using std::less;
-
-        void eat(priority_queue<int, vector<int>, less<int>>  &pq, const int weightCapacity) {
-            int numFruits = 0;
-            int gatheredWeight = 0;
-            //pq.top()
-
-            std::vector<int> takenFruits;
-            while ((gatheredWeight <= weightCapacity) && (numFruits < pq.size())) {
-                int fruit = pq.top();
-                gatheredWeight += fruit;
-                if (gatheredWeight <= weightCapacity) {
-                    pq.pop();
-                    int eaten = fruit / 2;
-                    if (eaten) {
-                        takenFruits.push_back(eaten);
-                    }
-                }
-            };
-            for (auto fruit : takenFruits) {
-                pq.push(fruit);
-            }
-            //pq.insert(pq.end(), takenFruits.begin(), takenFruits.end());
-            //std::push_heap(pq.begin(), pq.end());
-        }
-
-        int solve(int n, int* arr, const int weightCapacity) {
-            priority_queue<int, vector<int>, less<int>> pq(arr, arr + n);
-            int numOperations = 0;
-            while (pq.size() > 0) {
-                eat(pq, weightCapacity);
-                numOperations++;
-            }
-            return numOperations;
-        }
-    }
-
-    namespace heapStlSolution {
         using stl::PriorityQueue;
         using std::vector;
-        using std::priority_queue;
         typedef stl::size_type size_type;
 
-        void eat(PriorityQueue<int> &pq, const int weightCapacity) {
+        void Eat(PriorityQueue<int> &pq, const int weight_limit) {
             int numFruits = 0;
             int gatheredWeight = 0;
             vector<size_type> takenFruits;
-            while (pq.size() > 0) {
-                int fruit = pq.top();
+            while (pq.Size() > 0) {
+                int fruit = pq.Top();
                 gatheredWeight += fruit;
-                if (gatheredWeight > weightCapacity) {
+                if (gatheredWeight > weight_limit) {
                     break;
                 }
-                pq.pop();
+                pq.Pop();
                 int eatenFruit = fruit / 2;
                 if (0 != eatenFruit) {
                     takenFruits.push_back(eatenFruit);
@@ -312,31 +162,30 @@ namespace made {
             }
 
             for (auto fruit : takenFruits) {
-                pq.push(fruit);
+                pq.Push(fruit);
             }
         }
 
-        int solve(size_type n, int* arr, const int weightCapacity) {
+        int Solve(size_type n, int *arr, const int weight_limit) {
             PriorityQueue<int> pq(arr, arr + n);
             int numOperations = 0;
-            while (pq.size() > 0) {
-                eat(pq, weightCapacity);
+            while (pq.Size() > 0) {
+                Eat(pq, weight_limit);
                 numOperations++;
             }
             return numOperations;
         }
     }
+
 }
 
 using namespace made;
 
 #ifdef TEST
-void runTests(const stl::size_type n, int* arr, const int weightCapacity, int answer) {
+void runTests(const stl::size_type n, int *arr, const int weightCapacity, int answer) {
     int *copy = new int[n];
     std::copy(arr, arr + n, copy);
-    int naiveAnswer = sortSolution::solve(n, copy, weightCapacity);
-
-    naiveAnswer = heapSolution::solve(n, arr, weightCapacity);
+    int naiveAnswer = sortSolution::Solve(n, copy, weightCapacity);
     assert((naiveAnswer == answer));
     delete[] copy;
 }
@@ -353,16 +202,16 @@ int main() {
     std::cin.rdbuf(in.rdbuf());
     int n;
     std::cin >> n;
-    int* arr = new int[n];
+    int *arr = new int[n];
     for (int i = 0; i < n; i++) {
         std::cin >> arr[i];
     }
-    int weightCapacity;
-    std::cin >> weightCapacity;
+    int weight_limit;
+    std::cin >> weight_limit;
     // solve
-    int answer = heapStlSolution::solve(n, arr, weightCapacity);
+    int answer = solution::Solve(n, arr, weight_limit);
 #ifdef TEST
-    runTests(n, arr, weightCapacity, answer);
+    runTests(n, arr, weight_limit, answer);
 #endif
     // output
     std::cout << answer << std::endl;
