@@ -71,21 +71,13 @@ namespace Dequeue {
         T* newBuffer = new T[newCapacity];
         incModal(head);
         decModal(tail);
+        ++tail;
         T* newTail;
-        if (head <= tail) {
-            newTail = tail - head + newBuffer;
-            for (T* cur = newBuffer; head <= tail; head++, cur++) {
-                *cur = *head;
-            }
+        if (head < tail) {
+            newTail = std::copy(head, tail, newBuffer) - 1;
         } else {
-            newTail = newBuffer;
-            for (; head < right; head++, newTail++) {
-                *newTail = *head;
-            }
-            for (head = buffer; head <= tail; head++, newTail++) {
-                *newTail = *head;
-            }
-            newTail--;
+            newTail = std::copy(head, right, newBuffer);
+            newTail = std::copy(buffer, tail, newTail) - 1;
         }
         delete[] buffer;
         buffer = newBuffer;
