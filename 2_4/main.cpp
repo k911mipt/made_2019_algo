@@ -11,45 +11,67 @@ namespace made {
         using std::less;
         typedef size_t size_type;
 
-        template <class PtrLike, class Comparator = less<>>
-        void SiftDown(PtrLike begin, PtrLike end, size_type i, Comparator comparator = Comparator()) {
-            int left = i * 2 + 1;
-            int right = left + 1;
-            int heap_size = end - begin;
-            int best_index = i;
-            if ((left < heap_size) && comparator(begin[best_index], begin[left])) {
-                best_index = left;
-            }
-            if ((right < heap_size) && comparator(begin[best_index], begin[right])) {
-                best_index = right;
-            }
-            if (best_index != i) {
-                std::swap(begin[i], begin[best_index]);
-                SiftDown(begin, end, best_index, comparator);
-            }
-        }
+        namespace heap {
 
-        template <class PtrLike, class Comparator = less<>>
-        void Heapify(PtrLike begin, PtrLike end, Comparator comparator = Comparator()) {
-            int length = end - begin;
-            for (int i = (length - 1) / 2; i >= 0; i--) {
-                SiftDown(begin, end, i, comparator);
+            inline size_type Root(size_type index) {
+                return (index - 1) / 2;
             }
-        }
 
-        template <class PtrLike, class Comparator = less<>>
-        void PopHeap(PtrLike begin, PtrLike end, Comparator comparator = Comparator()) {
-            end--;
-            std::swap(*begin, *end);
-            SiftDown(begin, end, 0, comparator);
-        }
+            inline size_type Left(size_type index) {
+                return (index * 2) + 1;
+            }
 
-        template <class PtrLike, class Comparator = less<>>
-        void PushHeap(PtrLike begin, PtrLike end, Comparator comparator = Comparator()) {
-            int i = end - begin - 1;
-            while (comparator(begin[(i - 1) / 2], begin[i])) {
-                std::swap(begin[i], begin[(i - 1) / 2]);
-                i = (i - 1) / 2;
+            inline size_type Right(size_type index) {
+                return (index * 2) + 2;
+            }
+
+            template <class PtrLike, class Comparator = less<>>
+            void SiftDown(PtrLike begin, PtrLike end, size_type i, Comparator comparator = Comparator()) {
+                size_type heap_size = end - begin;
+                if (Root(heap_size) < i) {
+                    return;
+                }
+                size_type left = Left(i);
+                size_type right = Right(i);
+                size_type best_index = i;
+                if ((left < heap_size) && comparator(begin[best_index], begin[left])) {
+                    best_index = left;
+                }
+                if ((right < heap_size) && comparator(begin[best_index], begin[right])) {
+                    best_index = right;
+                }
+                if (best_index != i) {
+                    std::swap(begin[i], begin[best_index]);
+                    SiftDown(begin, end, best_index, comparator);
+                }
+            }
+
+            template <class PtrLike, class Comparator = less<>>
+            void MakeHeap(PtrLike begin, PtrLike end, Comparator comparator = Comparator()) {
+                size_type heap_size = end - begin;
+                for (size_type i = Root(heap_size); i >= 0; --i) {
+                    SiftDown(begin, end, i, comparator);
+                }
+            }
+
+            template <class PtrLike, class Comparator = less<>>
+            void PopHeap(PtrLike begin, PtrLike end, Comparator comparator = Comparator()) {
+                --end;
+                std::swap(*begin, *end);
+                heap::SiftDown(begin, end, 0, comparator);
+            }
+
+            template <class PtrLike, class Comparator = less<>>
+            void PushHeap(PtrLike begin, PtrLike end, Comparator comparator = Comparator()) {
+                size_type i = end - begin - 1;
+                if (i > 0) {
+                    size_type root = heap::Root(i);
+                    while (i && comparator(begin[root], begin[i])) {
+                        std::swap(begin[i], begin[root]);
+                        i = root;
+                        root = heap::Root(i);
+                    }
+                }
             }
         }
 
@@ -66,17 +88,17 @@ namespace made {
 
             template <class PtrLike>
             PriorityQueue(PtrLike begin, PtrLike end) : buffer_(begin, end), comparator_() {
-                Heapify(buffer_.begin(), buffer_.end(), comparator_);
+                heap::MakeHeap(buffer_.begin(), buffer_.end(), comparator_);
             }
 
             ~PriorityQueue() = default;
 
             inline void Push(T value) {
                 buffer_.push_back(value);
-                PushHeap(buffer_.begin(), buffer_.end(), comparator_);
+                heap::PushHeap(buffer_.begin(), buffer_.end(), comparator_);
             }
             inline void Pop() {
-                PopHeap(buffer_.begin(), buffer_.end(), comparator_);
+                heap::PopHeap(buffer_.begin(), buffer_.end(), comparator_);
                 buffer_.pop_back();
             }
             inline T Top() {
