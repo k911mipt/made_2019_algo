@@ -1,3 +1,26 @@
+/*
+# Задание 2_4. Скользящий максимум
+
+| Ограничение времени | 2 секунды                        |
+|---------------------|----------------------------------|
+| Ограничение памяти  | 5Mb                              |
+| Ввод                | стандартный ввод или input.txt   |
+| Вывод               | стандартный вывод или output.txt |
+
+Дан массив целых чисел `A[0..n)`, `n` не превосходит `100 000`.
+Также задан размер некоторого окна (последовательно расположенных элементов массива) в этом массиве `k`, `k <= n`.
+Требуется для каждого положения окна (от `0` и до `n-k`) вывести значение максимума в окне. 
+Скорость работы `O(n log n)`, память `O(n)`.
+
+## Формат ввода
+
+Вначале вводится `n` - количество элементов массива. Затем вводится `n` строк со значением каждого элемента. Затем вводится `k` - размер окна.
+
+## Формат вывода
+
+Разделенные пробелом значения максимумов для каждого положения окна.
+*/
+
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -156,6 +179,9 @@ namespace made {
         }
 
         void SolveWithQueue(int* arr, const size_type n, const size_type window_size, int* answers) {
+            // 1. Find maximum in first window 
+            // 2. for each window moving we "push" a new number and pop and old one
+            // if we popped number equal to current maximum, repeat maximum search
             int* left = arr;
             int* right = arr + window_size;
             int* last = arr + n;
@@ -215,7 +241,11 @@ int main() {
         size_type answers_size = n - window_size + 1;
         int* answers = new int[answers_size];
         try {
-            //made::solution::BetterBenchmark(arr, n, windowSize, answers);
+            // https://contest.yandex.ru/contest/14656/run-report/23142719/
+            // This solution takes 18ms and 536Kb memory on 11 test, which is better than heap solution (22ms and 904Kb)
+            // Though it has O(n^2) complexity and should not pass time limits if given array looks like `a[i] = n - i`
+            //made::solution::BetterBenchmark(arr, n, window_size, answers);
+
             made::solution::SolveWithHeap(arr, n, window_size, answers);
             for (size_type i = 0; i < answers_size; i++) {
                 std::cout << answers[i] << " ";
