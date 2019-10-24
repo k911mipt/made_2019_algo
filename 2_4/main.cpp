@@ -51,16 +51,16 @@ namespace made {
             template <class PtrLike, class Comparator = less<>>
             void SiftDown(PtrLike begin, PtrLike end, size_type i, Comparator comparator = Comparator()) {
                 size_type heap_size = end - begin;
-                if (Root(heap_size) < i) {
+                if (!heap_size || (Root(heap_size) <= i)) {
                     return;
                 }
                 size_type left = Left(i);
                 size_type right = Right(i);
                 size_type best_index = i;
-                if ((left < heap_size) && comparator(begin[best_index], begin[left])) {
+                if (comparator(begin[best_index], begin[left])) {
                     best_index = left;
                 }
-                if ((right < heap_size) && comparator(begin[best_index], begin[right])) {
+                if (comparator(begin[best_index], begin[right])) {
                     best_index = right;
                 }
                 if (best_index != i) {
@@ -103,9 +103,6 @@ namespace made {
             class Comparator = std::less<typename Container::value_type>>
             class PriorityQueue
         {
-        private:
-            Container buffer_;
-            Comparator comparator_;
         public:
             PriorityQueue() = default;
 
@@ -130,6 +127,9 @@ namespace made {
             inline size_type Size() {
                 return buffer_.size();
             }
+        private:
+            Container buffer_;
+            Comparator comparator_;
         };
     }
 
@@ -171,8 +171,16 @@ namespace made {
         }
 
         inline int FindMaximum(int* left, int* right) {
-            int maximum = *(left);
-            for (; left < right; left++) {
+            int maximum = *left;
+            for (; left < right; ++left) {
+                maximum = std::max(maximum, *left);
+            }
+            return maximum;
+        }
+
+        inline int FindMaximum(int* left, int* right, int old_maximum) {
+            int maximum = *left;
+            for (; (left < right) && (maximum < old_maximum); ++left) {
                 maximum = std::max(maximum, *left);
             }
             return maximum;
@@ -190,19 +198,19 @@ namespace made {
             while (right < last) {
                 if (*right >= maximum) {
                     maximum = *right;
-                    left++;
-                    right++;
+                    ++left;
+                    ++right;
                 }
                 else if (maximum == *left) {
-                    left++;
-                    right++;
-                    maximum = FindMaximum(left, right);
+                    ++left;
+                    ++right;
+                    maximum = FindMaximum(left, right, maximum);
                 }
                 else if (maximum > *left) {
-                    left++;
-                    right++;
+                    ++left;
+                    ++right;
                 }
-                answers++;
+                ++answers;
                 *answers = maximum;
             }
         }
@@ -213,7 +221,7 @@ namespace made {
             }
             else {
                 // Direct solution
-                for (size_type i = 0; i <= n - window_size; i++, arr++, answers++) {
+                for (size_type i = 0; i < n; i++, arr++, answers++) {
                     *answers = *arr;
                 }
             }
