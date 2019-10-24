@@ -1,30 +1,32 @@
-/*
-# Задание 2_4. Скользящий максимум
+п»ї/*
+# Р—Р°РґР°РЅРёРµ 2_4. РЎРєРѕР»СЊР·СЏС‰РёР№ РјР°РєСЃРёРјСѓРј
 
-| Ограничение времени | 2 секунды                        |
+| РћРіСЂР°РЅРёС‡РµРЅРёРµ РІСЂРµРјРµРЅРё | 2 СЃРµРєСѓРЅРґС‹                        |
 |---------------------|----------------------------------|
-| Ограничение памяти  | 5Mb                              |
-| Ввод                | стандартный ввод или input.txt   |
-| Вывод               | стандартный вывод или output.txt |
+| РћРіСЂР°РЅРёС‡РµРЅРёРµ РїР°РјСЏС‚Рё  | 5Mb                              |
+| Р’РІРѕРґ                | СЃС‚Р°РЅРґР°СЂС‚РЅС‹Р№ РІРІРѕРґ РёР»Рё input.txt   |
+| Р’С‹РІРѕРґ               | СЃС‚Р°РЅРґР°СЂС‚РЅС‹Р№ РІС‹РІРѕРґ РёР»Рё output.txt |
 
-Дан массив целых чисел `A[0..n)`, `n` не превосходит `100 000`.
-Также задан размер некоторого окна (последовательно расположенных элементов массива) в этом массиве `k`, `k <= n`.
-Требуется для каждого положения окна (от `0` и до `n-k`) вывести значение максимума в окне. 
-Скорость работы `O(n log n)`, память `O(n)`.
+Р”Р°РЅ РјР°СЃСЃРёРІ С†РµР»С‹С… С‡РёСЃРµР» `A[0..n)`, `n` РЅРµ РїСЂРµРІРѕСЃС…РѕРґРёС‚ `100 000`.
+РўР°РєР¶Рµ Р·Р°РґР°РЅ СЂР°Р·РјРµСЂ РЅРµРєРѕС‚РѕСЂРѕРіРѕ РѕРєРЅР° (РїРѕСЃР»РµРґРѕРІР°С‚РµР»СЊРЅРѕ СЂР°СЃРїРѕР»РѕР¶РµРЅРЅС‹С… СЌР»РµРјРµРЅС‚РѕРІ РјР°СЃСЃРёРІР°) РІ СЌС‚РѕРј РјР°СЃСЃРёРІРµ `k`, `k <= n`.
+РўСЂРµР±СѓРµС‚СЃСЏ РґР»СЏ РєР°Р¶РґРѕРіРѕ РїРѕР»РѕР¶РµРЅРёСЏ РѕРєРЅР° (РѕС‚ `0` Рё РґРѕ `n-k`) РІС‹РІРµСЃС‚Рё Р·РЅР°С‡РµРЅРёРµ РјР°РєСЃРёРјСѓРјР° РІ РѕРєРЅРµ.
+РЎРєРѕСЂРѕСЃС‚СЊ СЂР°Р±РѕС‚С‹ `O(n log n)`, РїР°РјСЏС‚СЊ `O(n)`.
 
-## Формат ввода
+## Р¤РѕСЂРјР°С‚ РІРІРѕРґР°
 
-Вначале вводится `n` - количество элементов массива. Затем вводится `n` строк со значением каждого элемента. Затем вводится `k` - размер окна.
+Р’РЅР°С‡Р°Р»Рµ РІРІРѕРґРёС‚СЃСЏ `n` - РєРѕР»РёС‡РµСЃС‚РІРѕ СЌР»РµРјРµРЅС‚РѕРІ РјР°СЃСЃРёРІР°. Р—Р°С‚РµРј РІРІРѕРґРёС‚СЃСЏ `n` СЃС‚СЂРѕРє СЃРѕ Р·РЅР°С‡РµРЅРёРµРј РєР°Р¶РґРѕРіРѕ СЌР»РµРјРµРЅС‚Р°. Р—Р°С‚РµРј РІРІРѕРґРёС‚СЃСЏ `k` - СЂР°Р·РјРµСЂ РѕРєРЅР°.
 
-## Формат вывода
+## Р¤РѕСЂРјР°С‚ РІС‹РІРѕРґР°
 
-Разделенные пробелом значения максимумов для каждого положения окна.
+Р Р°Р·РґРµР»РµРЅРЅС‹Рµ РїСЂРѕР±РµР»РѕРј Р·РЅР°С‡РµРЅРёСЏ РјР°РєСЃРёРјСѓРјРѕРІ РґР»СЏ РєР°Р¶РґРѕРіРѕ РїРѕР»РѕР¶РµРЅРёСЏ РѕРєРЅР°.
 */
 
 #include <iostream>
 #include <fstream>
 #include <vector>
 #include <algorithm>
+#include <deque>
+#include <cassert>
 
 namespace made {
 
@@ -131,6 +133,8 @@ namespace made {
             Container buffer_;
             Comparator comparator_;
         };
+
+        
     }
 
     namespace solution {
@@ -144,10 +148,70 @@ namespace made {
             int value;
         };
 
+        class RMQueue {
+        public:
+            RMQueue(int* arr, size_type window_size) : window_size_(window_size) {
+                maximum_ = *arr;
+                buffer_.push_back({ index_, *arr });
+                index_++;
+                arr++;
+                front_element_ = &buffer_.front();
+                back_element_ = &buffer_.back();
+                for (; index_ < window_size_; arr++) {
+                    push(*arr);
+                }
+                
+            };
+            void push(int item) {
+                if (window_size_ < 2) {
+                    front_element_->value = item;
+                    ++index_;
+                    return;
+                }
+
+                while ((buffer_.size() > 1) && (front_element_->index + window_size_ <= index_)) {
+                    buffer_.pop_front();
+                    front_element_ = &buffer_.front();
+                }
+                assert(buffer_.size() <= window_size_);
+                int current_value = item;
+                //QueueElement last_element = buffer_.back();
+                back_element_ = &buffer_.back();
+                if (front_element_->value <= current_value) {
+                    buffer_.clear();
+                    buffer_.push_back({ index_, current_value });
+                    front_element_ = &buffer_.front();
+                    back_element_ = &buffer_.back();
+                }
+                else if (back_element_->value == current_value) {
+                    back_element_->value = current_value;
+                    back_element_->index = index_;
+                }
+                else if (back_element_->value > current_value) {
+                    buffer_.push_back({ index_, current_value });
+                }
+                assert(buffer_.size() <= window_size_);
+                ++index_;
+            }
+            int getMax() {
+                return front_element_->value;
+                return 0;
+            }
+        private:
+            std::deque<QueueElement> buffer_;
+            size_type window_size_;
+            size_type left_ = 0;
+            size_type right_ = 0;
+            size_type index_ = 0;
+            int maximum_;
+            QueueElement *front_element_;
+            QueueElement *back_element_;
+        };
+
         class compareQueueElements
         {
         public:
-            bool operator() (const QueueElement& lhs, QueueElement& rhs) { return lhs.value < rhs.value; }
+            bool operator() (const QueueElement& lhs, const QueueElement& rhs) { return lhs.value < rhs.value; }
         };
 
         void SolveWithHeap(int *arr, const size_type n, const size_type window_size, int* answers) {
@@ -226,6 +290,17 @@ namespace made {
                 }
             }
         }
+
+        void RMQSolution(int* arr, const size_type n, const size_type window_size, int* answers) {
+            RMQueue rmQueue(arr, window_size);
+            int* end = arr + n;
+            arr += window_size;
+            for (; arr < end; ++arr, ++answers) {
+                *answers = rmQueue.getMax();
+                rmQueue.push(*arr);
+            }
+            *answers = rmQueue.getMax();
+        }
     }
 
 }
@@ -254,7 +329,9 @@ int main() {
             // Though it has O(n^2) complexity and should not pass time limits if given array looks like `a[i] = n - i`
             //made::solution::BetterBenchmark(arr, n, window_size, answers);
 
-            made::solution::SolveWithHeap(arr, n, window_size, answers);
+            //made::solution::SolveWithHeap(arr, n, window_size, answers);
+            made::solution::RMQSolution(arr, n, window_size, answers);
+            
             for (size_type i = 0; i < answers_size; i++) {
                 std::cout << answers[i] << " ";
             }
