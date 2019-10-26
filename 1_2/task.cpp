@@ -46,7 +46,14 @@ int main() {
             dequeue.PushFront(value);
             break;
         case 2:
-            if ((dequeue.IsEmpty() && (-1 != value)) || (value != dequeue.PopFront())) {
+            if (dequeue.IsEmpty()) {
+                if (-1 != value) {
+                    std::cout << "NO" << std::endl;
+                    return EXIT_SUCCESS;
+                }
+                break;
+            }
+            else if (value != dequeue.PopFront()) {
                 std::cout << "NO" << std::endl;
                 return EXIT_SUCCESS;
             }
@@ -55,7 +62,14 @@ int main() {
             dequeue.PushBack(value);
             break;
         case 4:
-            if ((dequeue.IsEmpty() && (-1 != value)) || (value != dequeue.PopBack())) {
+            if (dequeue.IsEmpty()) {
+                if (-1 != value) {
+                    std::cout << "NO" << std::endl;
+                    return EXIT_SUCCESS;
+                }
+                break;
+            }
+            else if (value != dequeue.PopBack()) {
                 std::cout << "NO" << std::endl;
                 return EXIT_SUCCESS;
             }
