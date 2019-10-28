@@ -26,17 +26,14 @@ namespace made {
 
             template <class PtrLike, class Comparator = less<>>
             void SiftDown(PtrLike begin, PtrLike end, size_type i, Comparator comparator = Comparator()) {
-                size_type heap_size = end - begin;
-                if (!heap_size || (Root(heap_size) <= i)) {
-                    return;
-                }
-                size_type left = Left(i);
-                size_type right = Right(i);
-                size_type best_index = i;
-                if (comparator(begin[best_index], begin[left])) {
+                int left = i * 2 + 1;
+                int right = left + 1;
+                int heap_size = end - begin;
+                int best_index = i;
+                if ((left < heap_size) && comparator(begin[best_index], begin[left])) {
                     best_index = left;
                 }
-                if (comparator(begin[best_index], begin[right])) {
+                if ((right < heap_size) && comparator(begin[best_index], begin[right])) {
                     best_index = right;
                 }
                 if (best_index != i) {
@@ -48,8 +45,8 @@ namespace made {
             template <class PtrLike, class Comparator = less<>>
             void MakeHeap(PtrLike begin, PtrLike end, Comparator comparator = Comparator()) {
                 size_type heap_size = end - begin;
-                for (size_type i = Root(heap_size); i >= 0; --i) {
-                    SiftDown(begin, end, i, comparator);
+                for (size_type i = heap_size / 2; i > 0; --i) {
+                    SiftDown(begin, end, i - 1, comparator);
                 }
             }
 

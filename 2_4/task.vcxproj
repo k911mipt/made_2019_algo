@@ -246,13 +246,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="main.cpp">
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Test|x64'">_MBCS;%(PreprocessorDefinitions);DEBUG;TEST</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">_MBCS;%(PreprocessorDefinitions);DEBUG;TEST</PreprocessorDefinitions>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Test|x64'">true</ExcludedFromBuild>
-      <PreprocessToFile Condition="'$(Configuration)|$(Platform)'=='Concat|Win32'">true</PreprocessToFile>
-      <PreprocessToFile Condition="'$(Configuration)|$(Platform)'=='Concat|x64'">true</PreprocessToFile>
+    <ClCompile Include="task.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Out|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Out|x64'">true</ExcludedFromBuild>
     </ClCompile>

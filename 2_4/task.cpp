@@ -25,7 +25,7 @@
 #include <fstream>
 #include "solution.h"
 
-using made::stl::size_type;
+using namespace made::solution;
 
 int main() {
     std::ifstream input_stream("input.txt");
@@ -33,25 +33,18 @@ int main() {
 
     size_type n;
     std::cin >> n;
-    int* arr = new int[n];
+    WindowElement* arr = new WindowElement[n];
     try {
         for (size_type i = 0; i < n; i++) {
-            std::cin >> arr[i];
+            arr[i].index = i;
+            std::cin >> arr[i].value;
         }
         size_type window_size;
         std::cin >> window_size;
-
         size_type answers_size = n - window_size + 1;
         int* answers = new int[answers_size];
         try {
-            // https://contest.yandex.ru/contest/14656/run-report/23142719/
-            // This solution takes 18ms and 536Kb memory on 11 test, which is better than heap solution (22ms and 904Kb)
-            // Though it has O(n^2) complexity and should not pass time limits if given array looks like `a[i] = n - i`
-            //made::solution::BetterBenchmark(arr, n, window_size, answers);
-
-            made::solution::SolveWithHeap(arr, n, window_size, answers);
-            //made::solution::RMQSolution(arr, n, window_size, answers);
-            
+            SolveWithHeap(arr, n, window_size, answers);
             for (size_type i = 0; i < answers_size; i++) {
                 std::cout << answers[i] << " ";
             }
