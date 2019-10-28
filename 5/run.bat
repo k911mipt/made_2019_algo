@@ -1,0 +1,1 @@
+yandex-contest-concat.exe task.cpp out.cpp
