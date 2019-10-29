@@ -23,54 +23,76 @@ void Sort(T* arr, int size, const TLess& isLess);
 #include <iostream>
 #include <fstream>
 #include <algorithm>
-#include <random>
-#include "custom_sort.h"
+
+#include <cassert>
+#include "common.h"
 #include "timer.h"
 
+#include "radix_sort.h"
+#include "gorset.h"
+#include "three_way.h"
 
-//using made::stl::size_type;
-const size_type MAX_VALUE = 1000000000;
-//const size_type MAX_VALUE = 6;
 
-inline void input(size_type *arr, size_type n) {
-    for (size_type i = 0; i < n; ++i, ++arr) {
-        std::cin >> *arr;
-    }
+void gorset_sort_adapter(size_type* arr, size_type n) {
+    gorset::radix_sort(arr, 0, n, 24);
 }
 
-inline void generate(size_type *arr, size_type n) {
-    std::default_random_engine generator;
-    std::uniform_int_distribution<size_type> distribution(0, MAX_VALUE);
-    for (size_type i = 0; i < n; ++i, ++arr) {
-        *arr = distribution(generator);
-    }
+void radix_sort_adapter(size_type* arr, size_type n) {
+    radix_sort::radix_sort(arr, size_type(0), n, radix_sort::shift_start - radix_sort::shift_step);
 }
 
-inline void output(size_type *arr, size_type n) {
-    for (size_type i = 0; i < n; ++i, ++arr) {
-        std::cout << *arr << " ";
-    }
-    std::cout << std::endl;
+void three_way_adapter(size_type* arr, size_type n) {
+    three_way::quicksort(arr, 0, n - 1);
+}
+
+using namespace common;
+
+void test() {
+    size_type n = 10000;
+    size_type* arr = new size_type[n];
+    size_type* arr_correct = new size_type[n];
+    generate(arr, n);
+    std::copy(arr, arr + n, arr_correct);
+    std::sort(arr_correct, arr_correct + n);
+    radix_sort_adapter(arr, n);
+    //three_way::quicksort(arr, 0, n - 1);
+    /*radix_sort::radix_sort(arr, 0, n, radix_sort::shift_start - radix_sort::shift_change);*/
+    //RadixSort(arr, n);
+    //custom_radix_sort::radix_sort(arr, arr + n);
+    //QuickSort(arr, arr + n);
+    for (size_type i = 0; i < n; ++i)
+        assert(arr[i] == arr_correct[i]);
+    delete[] arr;
+    delete[] arr_correct;
 }
 
 int main() {
-    size_type n = 1000;
+    tests_count = 1;
+    test();
+    size_type n = 25000000;
     size_type* arr = new size_type[n];
-
+    size_type a = 1 << 8;
+    std::cout << a << " generating" << std::endl;
     generate(arr, n);
-    ms time;
-
-    time = TimeIt(arr, n, Sort);
-    std::cout << "average BubbleSort " << time << std::endl;
-    time = TimeItStd(arr, arr + n);
-    std::cout << "average std::sort " << time << std::endl;
-    
-    /*time = TimeIt2(arr, arr + n, std::sort<size_type*>);*/
-    //time = TimeIt(arr, n, std::sort);
-
-    //Sort(arr, n);
-    std::sort(arr, arr + n);
     //output(arr, n);
+    ms time;
+    // прогреваемся
+    //std::cout << "sorting" << std::endl;
+    //time = TimeItStd(arr, arr + n);
+    //std::cout << "average std::sort " << time / 1000 << std::endl;
+
+    std::cout << "sorting" << std::endl;
+    time = TimeIt(arr, n, gorset_sort_adapter);
+    std::cout << "average gorset_sort " << time / 1000 << std::endl;
+
+    std::cout << "sorting" << std::endl;
+    time = TimeIt(arr, n, radix_sort_adapter);
+    std::cout << "average custom_radix_sort " << time / 1000 << std::endl;
+
+    std::cout << "sorting" << std::endl;
+    time = TimeIt(arr, n, three_way_adapter);
+    std::cout << "average three_way_sort " << time / 1000 << std::endl;
 
     delete[] arr;
+    return 0;
 }

@@ -244,9 +244,16 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="custom_sort.h" />
+    <ClInclude Include="common.h" />
+    <ClInclude Include="gorset.h" />
+    <ClInclude Include="radix_sort.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="sort.h" />
+    <ClInclude Include="three_way.h" />
     <ClInclude Include="timer.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="task.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
