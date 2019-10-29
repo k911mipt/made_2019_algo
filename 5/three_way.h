@@ -1,7 +1,6 @@
 #pragma once
 #ifndef THREE_WAY_H_
 #define THREE_WAY_H_
-#include "custom_sort_ten.h"
 namespace three_way {
 #ifdef INLINE_SWAP
 #undef INLINE_SWAP
