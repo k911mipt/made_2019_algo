@@ -78,9 +78,9 @@ void test() {
 }
 
 int main() {
-    tests_count = 1;
+    tests_count = 10;
     test();
-    size_type n = 25000;// 000;
+    size_type n = 25000000;
     size_type* arr = new size_type[n];
     std::cout << "generating " << n << " randoms in range " << 0 << "-" << MAX_VALUE << std::endl;
     generate(arr, n);
@@ -95,14 +95,14 @@ int main() {
     //time = TimeItStd(arr, arr+ n);
     //std::cout << "average std::sort " << time / 1000 << std::endl;
 
-    std::cout << "sorting" << std::endl;
-    time = TimeIt(arr, n, gorset_sort_adapter);
-    std::cout << "average gorset_sort " << time / 1000 << std::endl;
+    //std::cout << "sorting" << std::endl;
+    //time = TimeIt(arr, n, gorset_sort_adapter);
+    //std::cout << "average gorset_sort " << time / 1000 << std::endl;
     //std::cout << "average algo1 " << time / 1000 << std::endl;
 
-    std::cout << "sorting" << std::endl;
-    time = TimeIt(arr, n, radix_sort_adapter);
-    std::cout << "average custom_radix_sort " << time / 1000 << std::endl;
+    //std::cout << "sorting" << std::endl;
+    //time = TimeIt(arr, n, radix_sort_adapter);
+    //std::cout << "average custom_radix_sort " << time / 1000 << std::endl;
     //std::cout << "average algo2 " << time / 1000 << std::endl;
 
     std::cout << "sorting" << std::endl;
