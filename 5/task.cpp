@@ -32,7 +32,9 @@ void Sort(T* arr, int size, const TLess& isLess);
 #include "gorset.h"
 #include "radix_extra_memory.h"
 #include "custom_radix_extra_memory.h"
+#include "one_pass_radix_extra_memory.h"
 #include "three_way.h"
+
 
 //#include "custom_sort.h"
 
@@ -59,7 +61,9 @@ void test() {
     std::copy(arr, arr + n, arr_correct);
     std::sort(arr_correct, arr_correct + n);
     //Sort(arr, n);
-    custom_radix_extra_memory::RadixSort(arr, n);
+    
+    one_pass_radix_extra_memory::RadixSort(arr, n);
+    //custom_radix_extra_memory::RadixSort(arr, n);
     /*radix_extra_memory::RadixSort(arr, n);*/
     //radix_sort_adapter(arr, n);
     //three_way::quicksort(arr, 0, n - 1);
@@ -76,7 +80,7 @@ void test() {
 int main() {
     tests_count = 1;
     test();
-    size_type n = 25000000;
+    size_type n = 25000;// 000;
     size_type* arr = new size_type[n];
     std::cout << "generating " << n << " randoms in range " << 0 << "-" << MAX_VALUE << std::endl;
     generate(arr, n);
@@ -107,14 +111,19 @@ int main() {
     //std::cout << "average algo3 " << time / 1000 << std::endl;
 
     std::cout << "sorting" << std::endl;
+    time = TimeIt(arr, n, one_pass_radix_extra_memory::RadixSort);
+    std::cout << "average one_pass_radix_extra_memory " << time / 1000 << std::endl;
+    //std::cout << "average algo4 " << time / 1000 << std::endl;
+
+    std::cout << "sorting" << std::endl;
     time = TimeIt(arr, n, custom_radix_extra_memory::RadixSort);
     std::cout << "average custom_radix_extra_memory " << time / 1000 << std::endl;
-    //std::cout << "average algo4 " << time / 1000 << std::endl;
+    //std::cout << "average algo5 " << time / 1000 << std::endl;
 
     //std::cout << "sorting" << std::endl;
     //time = TimeIt(arr, n, three_way_adapter);
     //std::cout << "average three_way_sort " << time / 1000 << std::endl;
-    //std::cout << "average algo5 " << time / 1000 << std::endl;
+    //std::cout << "average algo6 " << time / 1000 << std::endl;
 
     delete[] arr;
     return 0;
