@@ -248,7 +248,7 @@
     <ClInclude Include="custom_radix_extra_memory.h" />
     <ClInclude Include="custom_sort.h" />
     <ClInclude Include="gorset.h" />
-    <ClInclude Include="one_pass_radix_extra_memory.h" />
+    <ClInclude Include="made_sort.h" />
     <ClInclude Include="radix_extra_memory.h" />
     <ClInclude Include="radix_sort.h" />
     <ClInclude Include="resource.h" />

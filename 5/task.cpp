@@ -23,16 +23,17 @@ void Sort(T* arr, int size, const TLess& isLess);
 #include <iostream>
 #include <fstream>
 #include <algorithm>
-
 #include <cassert>
+
 #include "common.h"
 #include "timer.h"
+#include "made_sort.h"
+
 
 #include "radix_sort.h"
 #include "gorset.h"
 #include "radix_extra_memory.h"
 #include "custom_radix_extra_memory.h"
-#include "one_pass_radix_extra_memory.h"
 #include "three_way.h"
 
 
@@ -62,7 +63,7 @@ void test() {
     std::sort(arr_correct, arr_correct + n);
     //Sort(arr, n);
     
-    one_pass_radix_extra_memory::RadixSort(arr, n);
+    made::LSDSort(arr, n);
     //custom_radix_extra_memory::RadixSort(arr, n);
     /*radix_extra_memory::RadixSort(arr, n);*/
     //radix_sort_adapter(arr, n);
@@ -106,19 +107,19 @@ int main() {
     //std::cout << "average algo2 " << time / 1000 << std::endl;
 
     std::cout << "sorting" << std::endl;
-    time = TimeIt(arr, n, radix_extra_memory::RadixSort);
-    std::cout << "average radix_extra_memory " << time / 1000 << std::endl;
-    //std::cout << "average algo3 " << time / 1000 << std::endl;
-
-    std::cout << "sorting" << std::endl;
-    time = TimeIt(arr, n, one_pass_radix_extra_memory::RadixSort);
-    std::cout << "average one_pass_radix_extra_memory " << time / 1000 << std::endl;
+    time = TimeIt(arr, n, made::LSDSort);
+    std::cout << "average LSD " << time / 1000 << std::endl;
     //std::cout << "average algo4 " << time / 1000 << std::endl;
 
     std::cout << "sorting" << std::endl;
     time = TimeIt(arr, n, custom_radix_extra_memory::RadixSort);
     std::cout << "average custom_radix_extra_memory " << time / 1000 << std::endl;
     //std::cout << "average algo5 " << time / 1000 << std::endl;
+
+    std::cout << "sorting" << std::endl;
+    time = TimeIt(arr, n, radix_extra_memory::RadixSort);
+    std::cout << "average default radix_extra_memory " << time / 1000 << std::endl;
+    //std::cout << "average algo3 " << time / 1000 << std::endl;
 
     //std::cout << "sorting" << std::endl;
     //time = TimeIt(arr, n, three_way_adapter);

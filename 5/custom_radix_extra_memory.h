@@ -6,22 +6,22 @@
 #include "xmmintrin.h"
 #include <emmintrin.h>
 namespace custom_radix_extra_memory {
-    typedef uint8_t iterator;
-    //typedef uint16_t iterator;
-    const uint8_t ITERATOR_SIZE = sizeof(iterator);
+    //typedef uint8_t Digit;
+    typedef uint16_t Digit;
+    const uint8_t ITERATOR_SIZE = sizeof(Digit);
     const uint32_t COUNTER_SIZE = 1 << (ITERATOR_SIZE * 8);
 
-    template<typename UINT>
-    void Radix(const uint8_t ByteIndex, const UINT* Source, UINT* Dest, const unsigned SourceSize)
+    template<typename Element>
+    void Radix(const uint8_t ByteIndex, const Element* Source, Element* Dest, const unsigned SourceSize)
     {
-        const uint8_t step = sizeof(UINT) / ITERATOR_SIZE;
+        const uint8_t step = sizeof(Element) / ITERATOR_SIZE;
         const uint8_t ten_step = step * 10; const uint8_t ts = ten_step;
         unsigned ByteCounter[COUNTER_SIZE];
         // set the counter array to zero
         std::memset(ByteCounter, 0, sizeof(ByteCounter));
 
         // start at the propper byte index
-        const iterator *curByte = reinterpret_cast<const iterator*>(Source) + ByteIndex;
+        const Digit *curByte = reinterpret_cast<const Digit*>(Source) + ByteIndex;
         //// loop over all of the bytes in the sorce, incrementing the index
         //for (unsigned i = 0; i < SourceSize; ++i, curByte += step) {
         //    //assert(*curByte <= COUNTER_SIZE);
@@ -33,8 +33,7 @@ namespace custom_radix_extra_memory {
         //_MM_HINT_T2 = 1, L3
         //_MM_HINT_NTA = 0, non neccessary http://rus-linux.net/lib.php?name=/MyLDP/hard/memory/memory-6-7.html
         // VECTORIZING
-        //const iterator *curByte = reinterpret_cast<const iterator*>(Source) + ByteIndex;
-        const uint8_t steps[10] = { ts, ts, ts, ts, ts, ts, ts, ts, ts, ts };
+        //const Digit *curByte = reinterpret_cast<const Digit*>(Source) + ByteIndex;
         //__m128i *curByteSSE, *stepSSE;
         //__m128i s;
         //curByteSSE = (__m128i *)curByte;
@@ -43,34 +42,34 @@ namespace custom_radix_extra_memory {
         //__m128i *curByteSSE = (__m128i*) curByte;
         //__m128i *stepSSE = (__m128i*) steps;
 
-        __m128 *curByteSSE = (__m128*) curByte;
-        __m128 *stepSSE = (__m128*) steps;
+//        __m128 *curByteSSE = (__m128*) curByte;
+//        __m128 *stepSSE = (__m128*) steps;
 
 
         //s = mm_set_ps1(0);
-        _mm_prefetch((char *)&curByteSSE[10], _MM_HINT_NTA);
-        _mm_prefetch((char *)&stepSSE[10], _MM_HINT_T0);
+//        _mm_prefetch((char *)&curByteSSE[10], _MM_HINT_NTA);
+//        _mm_prefetch((char *)&stepSSE[10], _MM_HINT_T0);
         /*curByteSSE = _mm_add_ps(curByteSSE, stepSSE);*/
         //for (unsigned i = 0; i < SourceSize / 10; ++i) {
         //    *curByteSSE= _mm_add_ps(curByteSSE, stepSSE);
         //}
 
         // start at the propper byte index
-        const iterator *curByte0 = curByte;
-        const iterator *curByte1 = curByte0 + step;
-        const iterator *curByte2 = curByte1 + step;
-        const iterator *curByte3 = curByte2 + step;
-        const iterator *curByte4 = curByte3 + step;
-        const iterator *curByte5 = curByte4 + step;
-        const iterator *curByte6 = curByte5 + step;
-        const iterator *curByte7 = curByte6 + step;
-        const iterator *curByte8 = curByte7 + step;
-        const iterator *curByte9 = curByte8 + step;
-        const iterator *curByte10 = curByte9 + step;
+        const Digit *curByte0 = curByte;
+        const Digit *curByte1 = curByte0 + step;
+        const Digit *curByte2 = curByte1 + step;
+        const Digit *curByte3 = curByte2 + step;
+        const Digit *curByte4 = curByte3 + step;
+        const Digit *curByte5 = curByte4 + step;
+        const Digit *curByte6 = curByte5 + step;
+        const Digit *curByte7 = curByte6 + step;
+        const Digit *curByte8 = curByte7 + step;
+        const Digit *curByte9 = curByte8 + step;
+        const Digit *curByte10 = curByte9 + step;
         //*curByteSSE = _mm_add_ps(*curByteSSE, *stepSSE);
-        curByteSSE++;
-        // ITERATOR_SIZE = 8 bit;
-        //alignas(ITERATOR_SIZE) const iterator* curBytes[] = {
+//        curByteSSE++;
+        // DIGIT_SIZE = 8 bit;
+        //alignas(DIGIT_SIZE) const Digit* curBytes[] = {
         //    curByte0,
         //    curByte1,
         //    curByte2,
@@ -82,7 +81,7 @@ namespace custom_radix_extra_memory {
         //    curByte8,
         //    curByte9
         //};
-        //alignas(ITERATOR_SIZE) const iterator curSteps[] = {
+        //alignas(DIGIT_SIZE) const Digit curSteps[] = {
         //    ten_step,
         //    ten_step,
         //    ten_step,
@@ -121,7 +120,7 @@ namespace custom_radix_extra_memory {
         }
 
         // now that you have indexes, copy the values over
-        curByte = reinterpret_cast<const iterator*>(Source) + ByteIndex;
+        curByte = reinterpret_cast<const Digit*>(Source) + ByteIndex;
         for (unsigned i = 0; i < SourceSize; ++i, ++Source, curByte += step)
         {
             unsigned *countPtr = ByteCounter + *curByte;
@@ -130,11 +129,11 @@ namespace custom_radix_extra_memory {
         }
     }
 
-    template<typename UINT>
-    void RadixSort(UINT *data, const unsigned size)
+    template<typename Element>
+    void RadixSort(Element *data, const unsigned size)
     {
-        const uint8_t step = sizeof(UINT) / ITERATOR_SIZE;
-        UINT *tempData = new UINT[size];
+        const uint8_t step = sizeof(Element) / ITERATOR_SIZE;
+        Element *tempData = new Element[size];
         if (step == 1)
         {
             Radix(0, data, tempData, size);

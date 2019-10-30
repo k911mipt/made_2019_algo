@@ -11,6 +11,7 @@ typedef uint32_t size_type;
 
 namespace common {
     const size_type MAX_VALUE = 1000000000;
+    //const size_type MAX_VALUE = 15;// 0000000;
 
     inline void input(size_type *arr, size_type n) {
         for (size_type i = 0; i < n; ++i, ++arr) {
@@ -23,7 +24,14 @@ namespace common {
         std::uniform_int_distribution<size_type> distribution(0, MAX_VALUE);
         for (size_type i = 0; i < n; ++i, ++arr) {
             *arr = distribution(generator);
+            //*arr = (distribution(generator) << 16) + distribution(generator);
         }
+        //for (; n > 0; --n, ++arr)
+        //{
+        //    *arr = 0;
+        //    for (unsigned i = 0; i < sizeof(size_type); ++i)
+        //        *arr |= (rand() & 0xFF) << (i * 8);
+        //}
     }
 
     inline void output(size_type *arr, size_type n) {

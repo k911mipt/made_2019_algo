@@ -50,7 +50,7 @@
     <ClInclude Include="custom_radix_extra_memory.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="one_pass_radix_extra_memory.h">
+    <ClInclude Include="made_sort.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
