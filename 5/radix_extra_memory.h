@@ -74,4 +74,4 @@ namespace radix_extra_memory {
             assert(data[0] <= data[1]);
     }
 }
-#endif RADIX_EXTRA_MEMORY_H_
+#endif // !RADIX_EXTRA_MEMORY_H_

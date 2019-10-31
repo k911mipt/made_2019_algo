@@ -150,4 +150,4 @@ namespace custom_radix_extra_memory {
         delete[] tempData;
     }
 }
-#endif CUSTOM_RADIX_EXTRA_MEMORY_H_
+#endif // !CUSTOM_RADIX_EXTRA_MEMORY_H_

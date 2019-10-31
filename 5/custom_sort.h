@@ -18,11 +18,11 @@
 //#undef INLINE_SWAP
 //#endif
 //#define INLINE_SWAP(a, b) {const int __SWAP_TEMP__ = a; a = b; b = __SWAP_TEMP__;}
-////typedef int size_type;
-//    /* This function partitions a[] in three parts
-//       a) a[l..i] contains all elements smaller than pivot
-//       b) a[i+1..j-1] contains all occurrences of pivot
-//       c) a[j..r] contains all elements greater than pivot */
+//typedef int size_type;
+///* This function partitions a[] in three parts
+//   a) a[l..i] contains all elements smaller than pivot
+//   b) a[i+1..j-1] contains all occurrences of pivot
+//   c) a[j..r] contains all elements greater than pivot */
 //void partition(size_type a[], int l, int r, int &i, int &j)
 //{
 //    i = l - 1, j = r;

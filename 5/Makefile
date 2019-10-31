@@ -1,13 +1,20 @@
-CC=g++ -O2 -fno-stack-limit -x c++ -std=c++14
-APP = app
+CC=g++ -O3 -fno-stack-limit -x c++ -std=c++14
+APP = sort
+HWAPP = test
 
-all: build_debug_app run_app
+all: build run_app
 
 run_app:
 	./$(APP)
 
-build_debug_app: main.cpp
-	$(CC) -DDEBUG main.cpp -o $(APP)
+build: build_hello_world build_test
+
+build_test: task.cpp
+	$(CC) task.cpp -o $(APP)
+
+
+build_hello_world: test.cpp
+	$(CC) -DDEBUG test.cpp -o $(HWAPP)
 
 clean:
-	rm -rf *.o $(APP)
+	rm -rf *.o $(HWAPP)

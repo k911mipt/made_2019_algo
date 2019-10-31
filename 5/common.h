@@ -11,7 +11,7 @@ typedef uint32_t size_type;
 
 namespace common {
     const size_type MAX_VALUE = 1000000000;
-    //const size_type MAX_VALUE = 15;// 0000000;
+    //const size_type MAX_VALUE = 1000;// 0000000;
 
     inline void input(size_type *arr, size_type n) {
         for (size_type i = 0; i < n; ++i, ++arr) {

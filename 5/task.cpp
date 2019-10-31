@@ -35,7 +35,9 @@ void Sort(T* arr, int size, const TLess& isLess);
 #include "radix_extra_memory.h"
 #include "custom_radix_extra_memory.h"
 #include "three_way.h"
-
+#include "award_of_sky.h"
+#include "stereopsis.h"
+#include "award_of_sky_parsed.h"
 
 //#include "custom_sort.h"
 
@@ -61,9 +63,14 @@ void test() {
     generate(arr, n);
     std::copy(arr, arr + n, arr_correct);
     std::sort(arr_correct, arr_correct + n);
+    made::radix_sort(arr, n);
     //Sort(arr, n);
-    
-    made::LSDSort(arr, n);
+
+    //made::LSDPointerSort(arr, n);
+    //made::LSDThreeSort(arr, n);
+    //stereopsis::RadixSort11(arr, n);
+    //made::award_of_sky_sort((int*)arr, n);
+    //made::LSDSort(arr, n);
     //custom_radix_extra_memory::RadixSort(arr, n);
     /*radix_extra_memory::RadixSort(arr, n);*/
     //radix_sort_adapter(arr, n);
@@ -97,29 +104,64 @@ int main() {
     //std::cout << "average std::sort " << time / 1000 << std::endl;
 
     //std::cout << "sorting" << std::endl;
-    //time = TimeIt(arr, n, gorset_sort_adapter);
-    //std::cout << "average gorset_sort " << time / 1000 << std::endl;
-    //std::cout << "average algo1 " << time / 1000 << std::endl;
-
-    //std::cout << "sorting" << std::endl;
     //time = TimeIt(arr, n, radix_sort_adapter);
     //std::cout << "average custom_radix_sort " << time / 1000 << std::endl;
     //std::cout << "average algo2 " << time / 1000 << std::endl;
 
     std::cout << "sorting" << std::endl;
-    time = TimeIt(arr, n, made::LSDSort);
-    std::cout << "average LSD " << time / 1000 << std::endl;
+    time = TimeIt(arr, n, award_parsed::award_of_sky_sort);
+    std::cout << "average award_of_sky " << time / 1000 << std::endl;
     //std::cout << "average algo4 " << time / 1000 << std::endl;
 
     std::cout << "sorting" << std::endl;
-    time = TimeIt(arr, n, custom_radix_extra_memory::RadixSort);
-    std::cout << "average custom_radix_extra_memory " << time / 1000 << std::endl;
-    //std::cout << "average algo5 " << time / 1000 << std::endl;
+    time = TimeIt(arr, n, made::radix_sort);
+    std::cout << "average little radix " << time / 1000 << std::endl;
+    //std::cout << "average algo4 " << time / 1000 << std::endl;
+
+    //std::cout << "sorting" << std::endl;
+    //time = TimeIt(arr, n, made::MSDSort);
+    //std::cout << "average MSD LSD " << time / 1000 << std::endl;
+    ////std::cout << "average algo4 " << time / 1000 << std::endl;
+
+    //std::cout << "sorting" << std::endl;
+    //time = TimeIt(arr, n, made::LSDPointerSort);
+    //std::cout << "average LSD 8 bits pointers " << time / 1000 << std::endl;
+    ////std::cout << "average algo4 " << time / 1000 << std::endl;
+
+    std::cout << "sorting" << std::endl;
+    time = TimeIt(arr, n, made::LSDSort);
+    std::cout << "average LSD 8 bits indexed " << time / 1000 << std::endl;
+    //std::cout << "average algo4 " << time / 1000 << std::endl;
+
+    std::cout << "sorting" << std::endl;
+    time = TimeIt(arr, n, made::LSDThreeSort);
+    std::cout << "average LSD 10 bits " << time / 1000 << std::endl;
+    //std::cout << "average algo4 " << time / 1000 << std::endl;
+
+    //std::cout << "sorting" << std::endl;
+    //time = TimeIt(arr, n, award_parsed::award_of_sky_sort);
+    //std::cout << "average award_of_sky " << time / 1000 << std::endl;
+    ////std::cout << "average algo4 " << time / 1000 << std::endl;
+
+    //std::cout << "sorting" << std::endl;
+    //time = TimeIt(arr, n, stereopsis::RadixSort11);
+    //std::cout << "average stereopsis " << time / 1000 << std::endl;
+    ////std::cout << "average algo4 " << time / 1000 << std::endl;
+
+    //std::cout << "sorting" << std::endl;
+    //time = TimeIt(arr, n, custom_radix_extra_memory::RadixSort);
+    //std::cout << "average custom_radix_extra_memory " << time / 1000 << std::endl;
+    ////std::cout << "average algo5 " << time / 1000 << std::endl;
 
     std::cout << "sorting" << std::endl;
     time = TimeIt(arr, n, radix_extra_memory::RadixSort);
     std::cout << "average default radix_extra_memory " << time / 1000 << std::endl;
     //std::cout << "average algo3 " << time / 1000 << std::endl;
+
+    //std::cout << "sorting" << std::endl;
+    //time = TimeIt(arr, n, gorset_sort_adapter);
+    //std::cout << "average radix_inplace_sort " << time / 1000 << std::endl;
+    ////std::cout << "average algo1 " << time / 1000 << std::endl;
 
     //std::cout << "sorting" << std::endl;
     //time = TimeIt(arr, n, three_way_adapter);

@@ -156,6 +156,9 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);DEBUG</PreprocessorDefinitions>
+      <PreprocessToFile>true</PreprocessToFile>
+      <PreprocessSuppressLineNumbers>true</PreprocessSuppressLineNumbers>
+      <PreprocessKeepComments>true</PreprocessKeepComments>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -192,6 +195,9 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);DEBUG</PreprocessorDefinitions>
+      <PreprocessToFile>true</PreprocessToFile>
+      <PreprocessSuppressLineNumbers>true</PreprocessSuppressLineNumbers>
+      <PreprocessKeepComments>true</PreprocessKeepComments>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -239,20 +245,24 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="task.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Out|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Out|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Out|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Out|x64'">false</ExcludedFromBuild>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="award_of_sky.h" />
+    <ClInclude Include="award_of_sky_parsed.h" />
     <ClInclude Include="common.h" />
     <ClInclude Include="custom_radix_extra_memory.h" />
     <ClInclude Include="custom_sort.h" />
     <ClInclude Include="gorset.h" />
     <ClInclude Include="made_sort.h" />
+    <ClInclude Include="partition.h" />
     <ClInclude Include="radix_extra_memory.h" />
     <ClInclude Include="radix_sort.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="sort.h" />
+    <ClInclude Include="stereopsis.h" />
     <ClInclude Include="three_way.h" />
     <ClInclude Include="timer.h" />
   </ItemGroup>

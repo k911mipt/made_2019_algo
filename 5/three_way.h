@@ -84,4 +84,4 @@ namespace three_way {
     }
 }
 #undef INLINE_SWAP
-#endif THREE_WAY_H_
+#endif // !THREE_WAY_H_

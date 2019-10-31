@@ -1,14 +1,16 @@
 #ifndef RADIX_H_
 #define RADIX_H_
+#include "sort.h"
 #include <iostream>
 #include <cassert>
-#include "common.h"
 
 namespace radix_sort {
 #ifdef INLINE_SWAP
 #undef INLINE_SWAP
 #endif
 #define INLINE_SWAP(a, b) {const T __SWAP_TEMP__ = a; a = b; b = __SWAP_TEMP__;}
+    
+    typedef uint32_t size_type;
 
     void insertion_sort(size_type *array, int offset, int end) {
         int x, y, temp;
@@ -101,3 +103,13 @@ namespace radix_sort {
 }
 
 #endif // !RADIX_H_
+
+#ifndef MADE_CUSTOM_SORT_H_
+#define MADE_CUSTOM_SORT_H_
+void Sort(int *arr, int size)
+{
+    radix_sort::radix_sort(arr, 0, size - 1, radix_sort::shift_start - radix_sort::shift_step);
+    //made::LSDThreeSort((made::Element*)arr, (made::ElementCounter)size);
+}
+#endif // !MADE_CUSTOM_SORT_H_
+
