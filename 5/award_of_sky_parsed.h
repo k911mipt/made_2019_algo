@@ -122,7 +122,7 @@ void award_of_sky_sort(register int vector[], register unsigned int size)
     /* 4 - Iterate the bucket values within the orginal array and chnage the */
     /*     corresponding values in the helper                                */
 
-    int *point[0x100] = {0}; /* Array of pointers to the helper array */
+    int* point[0x100] = {0}; /* Array of pointers to the helper array */
 
     if (bytes_to_sort > 1 && size > 1600000)
     { /* MSB order (size > 1.6M) */

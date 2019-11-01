@@ -57,20 +57,21 @@ void three_way_adapter(size_type* arr, size_type n) {
 using namespace common;
 
 void test() {
-    size_type n = 10000;
+    size_type n = 100000;
     size_type* arr = new size_type[n];
     size_type* arr_correct = new size_type[n];
     generate(arr, n);
     std::copy(arr, arr + n, arr_correct);
     std::sort(arr_correct, arr_correct + n);
+
+    //made::LSDSort(arr, n);
     made::radix_sort(arr, n);
     //Sort(arr, n);
-
     //made::LSDPointerSort(arr, n);
     //made::LSDThreeSort(arr, n);
     //stereopsis::RadixSort11(arr, n);
     //made::award_of_sky_sort((int*)arr, n);
-    //made::LSDSort(arr, n);
+
     //custom_radix_extra_memory::RadixSort(arr, n);
     /*radix_extra_memory::RadixSort(arr, n);*/
     //radix_sort_adapter(arr, n);

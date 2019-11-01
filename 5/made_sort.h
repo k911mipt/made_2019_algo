@@ -7,8 +7,6 @@
 #include <iostream>
 #include <cstring>
 
-#include "partition.h"
-
 namespace made {
     typedef uint8_t Digit;
     //typedef uint16_t Digit;
@@ -30,6 +28,11 @@ namespace made {
         ElementCounter digit_counters[num_digits][MAX_DIGIT_COUNT] = { 0 };
         ElementCounter(&digit_start_indexes)[num_digits][MAX_DIGIT_COUNT] = digit_counters; // Reference for further readability
 
+        Element constant_bits = 0;
+        Element first = *arr;
+        for (Element* arr_iterator = arr + 1; arr_iterator < arr + size; ++arr_iterator) {
+            constant_bits |= (*arr^*arr_iterator);
+        }
         /* Number is stored in reverse order
          * example: uint32_t number 439041101 located at 0x00000000
          * 439041101 = 0x1A2B3C4D
@@ -91,11 +94,15 @@ namespace made {
             for (ElementCounter i = 0; i < size; ++i, ++arr_iterator, digit_iterator += step)
             {
                 uint32_t *value_ptr = digit_start_indexes[i_digit] + *digit_iterator;
+                // p & 0x3FFFFFFF - зануление старших двух битов
+                // p | 0xc0000000 - присваивание единицы в старшие двух битов
+                *arr_iterator |= 0xc0000000;
+                *arr_iterator &= 0x3FFFFFFF;
                 buffer[(*value_ptr)++] = *arr_iterator;
                 //(*value_ptr)++;
             }
-            //arr_iterator = buffer; buffer = arr; arr = arr_iterator; // swapping pointers for next sorting iteration
-            arr_iterator = arr;
+            arr_iterator = buffer; buffer = arr; arr = arr_iterator; // swapping pointers for next sorting iteration
+            //arr_iterator = arr;
         }
         delete[] buffer;
     }
@@ -251,11 +258,10 @@ namespace made {
     void LSDExtendedSort(Element* arr, const ElementCounter size) {
         //const int prel = (size > (64 << 1)) ? 64 : (size >> 3);
 
-        // TODO: �������� ����������
+        // TODO: вы¤снить назначение
         int prel;
         //if (size > (32))
     }
-
 
     void LSDStep(Element* arr, const ElementCounter size, const uint8_t num_digits, Element *buffer = nullptr)
     {
@@ -319,7 +325,7 @@ namespace made {
         //}
         for (int j_d = 0; j_d < num_digits; ++j_d) { // j_digit
             for (ElementCounter i_e = 0; i_e < MAX_DIGIT_COUNT; ++i_e) { // i_element
-                // TODO ��������� ����?
+                // TODO размотать цикл?
                 temp_counts[j_d] = digit_counters[j_d][i_e];
                 digit_start_indexes[j_d][i_e] = start_indexes[j_d];
                 start_indexes[j_d] += temp_counts[j_d];
@@ -361,7 +367,7 @@ namespace made {
     }
 
     //template <class T>
-    void MSDStep(Element* arr, ElementCounter offset, ElementCounter end, uint8_t shift) {
+    void MSDStep(Element* arr, ElementCounter offset, ElementCounter end, uint8_t shift, Element* buffer) {
         assert(offset >= 0);
         ElementCounter x;
         ElementCounter last[MAX_DIGIT_COUNT] = { 0 };
@@ -401,70 +407,87 @@ namespace made {
         //    LSDStep(arr, batch_step, shift);
         //}
 
-        const ElementCounter threschold = 1024 * 1024 / 4; // 1 Mb of 1024*1024 ints
-        if (shift > 0) {
-            shift -= 8;
-            //ElementCounter st
-            ElementCounter num_high_bit_sorted = pointer[0] - offset;
-            for (x = 1; x < MAX_DIGIT_COUNT; ++x) {
-                if (num_high_bit_sorted > threschold) {
-                    MSDStep(arr, offset, offset + num_high_bit_sorted, shift);
-                    offset += num_high_bit_sorted;
-                    num_high_bit_sorted = 0;
-                }
-                else {
-                    ElementCounter num_current_digit = pointer[x] - pointer[x - 1]; // ����� ��������� ������� �����
-                    if (num_high_bit_sorted + num_current_digit > threschold) {
-                        LSDStep(arr + offset, num_high_bit_sorted, shift / 8 + 2);
-                        offset += num_high_bit_sorted;
-                        num_high_bit_sorted = 0;
-                    }
-                }
-                num_high_bit_sorted += (pointer[x] - pointer[x - 1]);
-            }
-            if (num_high_bit_sorted)
-                LSDStep(arr + offset, num_high_bit_sorted, shift / 8 + 2);
-        }
-
+        //const ElementCounter threshold = 1024 * 1024 / 4; // 1 Mb of 1024*1024 ints
         //if (shift > 0) {
         //    shift -= 8;
-        //    for (x = 0; x < MAX_DIGIT_COUNT; ++x) {
-        //        ElementCounter pX = pointer[x];
-        //        if (x > 0) {
-        //            temp = pX - pointer[x - 1];
+        //    //ElementCounter st
+        //    ElementCounter num_high_bit_sorted = pointer[0] - offset;
+        //    for (x = 1; x < MAX_DIGIT_COUNT; ++x) {
+        //        if (num_high_bit_sorted > threshold) {
+        //            MSDStep(arr, offset, offset + num_high_bit_sorted, shift);
+        //            offset += num_high_bit_sorted;
+        //            num_high_bit_sorted = 0;
         //        }
         //        else {
-        //            temp = pX - offset;
+        //            ElementCounter num_current_digit = pointer[x] - pointer[x - 1]; // число вхождений текущей цифры
+        //            if (num_high_bit_sorted + num_current_digit > threshold) {
+        //                LSDStep(arr + offset, num_high_bit_sorted, shift / 8 + 2);
+        //                offset += num_high_bit_sorted;
+        //                num_high_bit_sorted = 0;
+        //            }
         //        }
-        //        temp = x > 0 ? pX - pointer[x - 1] : pointer[0] - offset;
-        //        int temp_left = pX - temp;
-        //        int temp_right = pX;
-        //        if (temp > 1024 * 1024) { // 1MB
-        //            MSDStep(arr, pX - temp, pX, shift);
-        //        }
-        //        else if (temp > 1) {
-        //            //insertion_sort(arr, pointer[x] - temp, pointer[x]);
-        //            LSDStep(arr + pX - temp, temp, shift / 8 + 1);
-        //        }
+        //        num_high_bit_sorted += (pointer[x] - pointer[x - 1]);
         //    }
+        //    if (num_high_bit_sorted)
+        //        LSDStep(arr + offset, num_high_bit_sorted, shift / 8 + 2);
         //}
+
+        if (shift > 0) {
+            shift -= 8;
+            for (x = 0; x < MAX_DIGIT_COUNT; ++x) {
+                ElementCounter pX = pointer[x];
+                if (x > 0) {
+                    temp = pX - pointer[x - 1];
+                }
+                else {
+                    temp = pX - offset;
+                }
+                temp = x > 0 ? pX - pointer[x - 1] : pointer[0] - offset;
+                int temp_left = pX - temp;
+                int temp_right = pX;
+                if (temp > 1024 * 1024) { // 1MB
+                    MSDStep(arr, pX - temp, pX, shift, buffer);
+                }
+                else if (temp > 1) {
+                    //insertion_sort(arr, pointer[x] - temp, pointer[x]);
+                    LSDStep(arr + pX - temp, temp, shift / 8 + 1, buffer);
+                }
+            }
+        }
 
     }
 
     void MSDSort(made::Element *arr, made::ElementCounter size) {
-        made::MSDStep(arr, 0, size, 24);
+        Element *buffer = new Element[size];
+        made::MSDStep(arr, 0, size, 24, buffer);
+        delete buffer;
     }
 
     void _radix_sort_lsb(Element *begin, Element *end, Element *begin1, Element maxshift)
     {
         Element *end1 = begin1 + (end - begin);
 
+        //for (Element shift = 0; shift <= maxshift; shift += 8)
+        //{
+        //    size_t count[0x100] = {};
+        //    for (Element *p = begin; p != end; p++)
+        //        count[(*p >> shift) & 0xFF]++;
+        //    unsigned *bucket[0x100], *q = begin1;
+        //    for (int i = 0; i < 0x100; q += count[i++])
+        //        bucket[i] = q;
+        //    for (Element *p = begin; p != end; p++)
+        //        *bucket[(*p >> shift) & 0xFF]++ = *p;
+        //    std::swap(begin, begin1);
+        //    std::swap(end, end1);
+        //}
+        size_t count[0x100];
+        unsigned *bucket[0x100];
         for (Element shift = 0; shift <= maxshift; shift += 8)
         {
-            size_t count[0x100] = {};
+            std::memset(count, 0, sizeof(count));
             for (Element *p = begin; p != end; p++)
                 count[(*p >> shift) & 0xFF]++;
-            unsigned *bucket[0x100], *q = begin1;
+            unsigned *q = begin1;
             for (int i = 0; i < 0x100; q += count[i++])
                 bucket[i] = q;
             for (Element *p = begin; p != end; p++)
@@ -486,21 +509,53 @@ namespace made {
             obucket[i] = bucket[i] = q;
         for (Element *p = begin; p != end; p++)
             *bucket[(*p >> shift) & 0xFF]++ = *p;
+        for (int i = 0; i < 0x100; ++i)
+            _radix_sort_lsb(obucket[i], bucket[i], begin + (obucket[i] - begin1), shift - 8);
+        //for (int i = 0; i < 0x100; ++i)
+        //    LSDStep(obucket[i], bucket[i] - obucket[i], shift / 8 + 1, begin + (obucket[i] - begin1));
+
+    }
+
+    void k911_radix_sort_msb(Element *arr, Element *arr_end, Element *buffer, Element shift)
+    {
+        unsigned *end1 = arr + (arr_end - arr);
+        size_t count[0x100] = {};
+        for (Element *p = arr; p != arr_end; p++) {
+            //count[(*p >> shift) & 0xFF]++;
+            uint8_t index = (*p >> shift) & 0xFF;
+            count[index]++;
+        }
+        Element target_current_indexes[0x100];
+        Element target_start_indexes[0x100];
+        Element q = 0; // счётчик буффера
+        for (int i = 0; i < 0x100; q += count[i++]) {
+            target_start_indexes[i] = target_current_indexes[i] = q;
+        }
+        for (Element *p = arr; p != arr_end; p++) {
+            //*bucket[(*p >> shift) & 0xFF]++ = *p;
+            arr[target_current_indexes[(*p >> shift) & 0xFF]++] = *p;
+            //uint8_t index = (*p >> shift) & 0xFF; // можно использовать указатель на uint8_t чтобы не делать shift
+            //arr[target_current_indexes[index]] = *p;
+            //target_current_indexes[index]++;
+        }
+
         //for (int i = 0; i < 0x100; ++i)
         //    _radix_sort_lsb(obucket[i], bucket[i], begin + (obucket[i] - begin1), shift - 8);
         for (int i = 0; i < 0x100; ++i)
-            LSDStep(obucket[i], bucket[i]- obucket[i], shift / 8 + 1, begin + (obucket[i] - begin1));
-            
+            LSDStep(arr + target_start_indexes[i], target_current_indexes[i] - target_start_indexes[i], shift / 8 + 1, arr + target_start_indexes[i]);
+
     }
 
     void radix_sort(Element *begin, ElementCounter size)
     {
         Element *end = begin + size;
         unsigned *begin1 = new Element[end - begin];
+        //k911_radix_sort_msb(begin, end, begin1, 24);
         _radix_sort_msb(begin, end, begin1, 24);
         //_radix_sort_lsb(begin, end, begin1, 32);
         delete[] begin1;
     }
+
 }
 
 #ifndef MADE_CUSTOM_SORT_H_
