@@ -7,6 +7,7 @@
 #include <iostream>
 #include <cstring>
 
+#ifndef COMMON_SORT_H_
 namespace made {
     typedef uint8_t Digit;
     //typedef uint16_t Digit;
@@ -16,6 +17,12 @@ namespace made {
     const uint32_t MAX_DIGIT_COUNT = 1 << (DIGIT_SIZE * 8);
     // TODO which type to use for mask? 32 or 8 bit? Check how different mask types applies
     const Element LOWER_DIGIT_MASK = MAX_DIGIT_COUNT - 1; // digit = 1 byte: 0xFF, digit = 2 byte: 0xFFFF, etc.;
+}
+#endif
+// digit_i^r(x) = [x/r^i] mod R   i-я цифра числа, состоящая из r бит
+//#define DIGIT(x, i, R) ((x >> i * R) & (R - 1))
+
+namespace made {
 
     void LSDSort(Element* arr, const ElementCounter size)
     {
@@ -255,30 +262,12 @@ namespace made {
         delete[] buffer;
     }
 
-    void LSDExtendedSort(Element* arr, const ElementCounter size) {
-        //const int prel = (size > (64 << 1)) ? 64 : (size >> 3);
-
-        // TODO: вы¤снить назначение
-        int prel;
-        //if (size > (32))
-    }
-
-    void LSDStep(Element* arr, const ElementCounter size, const uint8_t num_digits, Element *buffer = nullptr)
+    void LSDStep(Element* arr, const ElementCounter size, const uint8_t num_digits, Element *buffer)
     {
         const uint8_t step = sizeof(Element) / DIGIT_SIZE;
         const uint8_t MAX_NUM_DIGITS = step;
         ElementCounter digit_counters[MAX_NUM_DIGITS][MAX_DIGIT_COUNT] = { 0 };
         ElementCounter(&digit_start_indexes)[MAX_NUM_DIGITS][MAX_DIGIT_COUNT] = digit_counters; // Reference for further readability
-
-        /* Number is stored in reverse order
-         * example: uint32_t number 439041101 located at 0x00000000
-         * 439041101 = 0x1A2B3C4D
-         * uint32_t 0x00000000 : 0x1A2B3C4D
-         * uint8_t  0x00000000 : 0x4D
-         * uint8_t  0x00000001 : 0x3C
-         * uint8_t  0x00000002 : 0x2B
-         * uint8_t  0x00000003 : 0x1A
-         */
 
          // Filling the buckets
         const Digit* digit_ptrs[MAX_NUM_DIGITS];
@@ -291,38 +280,12 @@ namespace made {
                 ++digit_counters[j][*digit_ptrs[j]];
                 digit_ptrs[j] += step;
             }
-            //++digit_counters[0][*digit_ptr++];
-            //++digit_counters[1][*digit_ptr++];
-            //++digit_counters[2][*digit_ptr++];
-            //++digit_counters[3][((*digit_ptr++) & 0x3F)];
         }
 
         // Count start indexes for each digit. Store in digit_start_indexes
         unsigned start_indexes[MAX_NUM_DIGITS] = { 0 };
         ElementCounter temp_counts[MAX_NUM_DIGITS];
-        //ElementCounter temp;
-        //for (ElementCounter i_e = 0; i_e < MAX_DIGIT_COUNT; ++i_e) { // i_element
-        //    for (int j_d = 0; j_d < num_digits; ++j_d) { // j_digit
-        //        temp_counts[j_d] = digit_counters[j_d][i_e];
-        //        digit_start_indexes[j_d][i_e] = start_indexes[j_d];
-        //        start_indexes[j_d] += temp_counts[j_d];
-        //    }
-        //    //temp_counts[0] = digit_counters[0][i_e];
-        //    //digit_start_indexes[0][i_e] = start_indexes[0];
-        //    //start_indexes[0] += temp_counts[0];
 
-        //    //temp_counts[1] = digit_counters[1][i_e];
-        //    //digit_start_indexes[1][i_e] = start_indexes[1];
-        //    //start_indexes[1] += temp_counts[1];
-
-        //    //temp_counts[2] = digit_counters[2][i_e];
-        //    //digit_start_indexes[2][i_e] = start_indexes[2];
-        //    //start_indexes[2] += temp_counts[2];
-
-        //    //temp_counts[3] = digit_counters[3][i_e];
-        //    //digit_start_indexes[3][i_e] = start_indexes[3];
-        //    //start_indexes[3] += temp_counts[3];
-        //}
         for (int j_d = 0; j_d < num_digits; ++j_d) { // j_digit
             for (ElementCounter i_e = 0; i_e < MAX_DIGIT_COUNT; ++i_e) { // i_element
                 // TODO размотать цикл?
@@ -335,9 +298,6 @@ namespace made {
         // Sorting and placing results into buffer
         Element* arr_iterator = arr;
         Digit* digit_iterator;
-        //if (!buffer) {
-        //    buffer = new Element[size];
-        //}
         for (uint8_t i_digit = 0; i_digit < num_digits; ++i_digit) {
             digit_iterator = reinterpret_cast<Digit*>(arr_iterator) + i_digit;
             for (ElementCounter i = 0; i < size; ++i, ++arr_iterator, digit_iterator += step) {
@@ -351,7 +311,7 @@ namespace made {
             arr_iterator = buffer; buffer = arr; arr = arr_iterator;
             memcpy(arr, buffer, size * 4);
         }
-        //delete[] buffer;
+
     }
 
     void insertion_sort(Element* array, ElementCounter offset, ElementCounter end) {
@@ -481,13 +441,13 @@ namespace made {
         //    std::swap(end, end1);
         //}
         size_t count[0x100];
-        unsigned *bucket[0x100];
+        Element *bucket[0x100];
         for (Element shift = 0; shift <= maxshift; shift += 8)
         {
             std::memset(count, 0, sizeof(count));
             for (Element *p = begin; p != end; p++)
                 count[(*p >> shift) & 0xFF]++;
-            unsigned *q = begin1;
+            Element *q = begin1;
             for (int i = 0; i < 0x100; q += count[i++])
                 bucket[i] = q;
             for (Element *p = begin; p != end; p++)
@@ -499,7 +459,7 @@ namespace made {
 
     void _radix_sort_msb(Element *begin, Element *end, Element *begin1, Element shift)
     {
-        unsigned *end1 = begin1 + (end - begin);
+        //unsigned *end1 = begin1 + (end - begin);
 
         size_t count[0x100] = {};
         for (Element *p = begin; p != end; p++)
@@ -516,46 +476,14 @@ namespace made {
 
     }
 
-    void k911_radix_sort_msb(Element *arr, Element *arr_end, Element *buffer, Element shift)
-    {
-        unsigned *end1 = arr + (arr_end - arr);
-        size_t count[0x100] = {};
-        for (Element *p = arr; p != arr_end; p++) {
-            //count[(*p >> shift) & 0xFF]++;
-            uint8_t index = (*p >> shift) & 0xFF;
-            count[index]++;
-        }
-        Element target_current_indexes[0x100];
-        Element target_start_indexes[0x100];
-        Element q = 0; // счётчик буффера
-        for (int i = 0; i < 0x100; q += count[i++]) {
-            target_start_indexes[i] = target_current_indexes[i] = q;
-        }
-        for (Element *p = arr; p != arr_end; p++) {
-            //*bucket[(*p >> shift) & 0xFF]++ = *p;
-            arr[target_current_indexes[(*p >> shift) & 0xFF]++] = *p;
-            //uint8_t index = (*p >> shift) & 0xFF; // можно использовать указатель на uint8_t чтобы не делать shift
-            //arr[target_current_indexes[index]] = *p;
-            //target_current_indexes[index]++;
-        }
-
-        //for (int i = 0; i < 0x100; ++i)
-        //    _radix_sort_lsb(obucket[i], bucket[i], begin + (obucket[i] - begin1), shift - 8);
-        for (int i = 0; i < 0x100; ++i)
-            LSDStep(arr + target_start_indexes[i], target_current_indexes[i] - target_start_indexes[i], shift / 8 + 1, arr + target_start_indexes[i]);
-
-    }
-
     void radix_sort(Element *begin, ElementCounter size)
     {
         Element *end = begin + size;
-        unsigned *begin1 = new Element[end - begin];
-        //k911_radix_sort_msb(begin, end, begin1, 24);
-        _radix_sort_msb(begin, end, begin1, 24);
+        unsigned *buffer = new Element[end - begin];
+        _radix_sort_msb(begin, end, buffer, 24);
         //_radix_sort_lsb(begin, end, begin1, 32);
-        delete[] begin1;
+        delete[] buffer;
     }
-
 }
 
 #ifndef MADE_CUSTOM_SORT_H_

@@ -144,6 +144,7 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);DEBUG</PreprocessorDefinitions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -159,6 +160,7 @@
       <PreprocessToFile>true</PreprocessToFile>
       <PreprocessSuppressLineNumbers>true</PreprocessSuppressLineNumbers>
       <PreprocessKeepComments>true</PreprocessKeepComments>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -183,6 +185,7 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);DEBUG</PreprocessorDefinitions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -198,6 +201,7 @@
       <PreprocessToFile>true</PreprocessToFile>
       <PreprocessSuppressLineNumbers>true</PreprocessSuppressLineNumbers>
       <PreprocessKeepComments>true</PreprocessKeepComments>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -256,7 +260,9 @@
     <ClInclude Include="custom_radix_extra_memory.h" />
     <ClInclude Include="custom_sort.h" />
     <ClInclude Include="gorset.h" />
+    <ClInclude Include="k911mipt_sort.h" />
     <ClInclude Include="made_sort.h" />
+    <ClInclude Include="n_log_log_n.h" />
     <ClInclude Include="partition.h" />
     <ClInclude Include="radix_extra_memory.h" />
     <ClInclude Include="radix_sort.h" />

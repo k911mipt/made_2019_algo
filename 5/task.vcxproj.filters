@@ -65,5 +65,11 @@
     <ClInclude Include="partition.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
+    <ClInclude Include="n_log_log_n.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="k911mipt_sort.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

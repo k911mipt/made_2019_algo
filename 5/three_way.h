@@ -1,6 +1,7 @@
 #pragma once
 #ifndef THREE_WAY_H_
 #define THREE_WAY_H_
+#include "common.h"
 namespace three_way {
 #ifdef INLINE_SWAP
 #undef INLINE_SWAP
@@ -10,11 +11,11 @@ namespace three_way {
        a) a[l..i] contains all elements smaller than pivot
        b) a[i+1..j-1] contains all occurrences of pivot
        c) a[j..r] contains all elements greater than pivot */
-    void partition(size_type a[], int l, int r, int &i, int &j)
+    void partition(Element a[], int l, int r, int &i, int &j)
     {
         i = l - 1, j = r;
         int p = l - 1, q = r;
-        size_type v = a[r];
+        Element v = a[r];
 
         while (true)
         {
@@ -69,7 +70,7 @@ namespace three_way {
     }
 
     // 3-way partition based quick sort 
-    void quicksort(size_type a[], int l, int r)
+    void quicksort(Element a[], int l, int r)
     {
         if (r <= l) return;
 
@@ -81,6 +82,10 @@ namespace three_way {
         // Recur 
         quicksort(a, l, j);
         quicksort(a, i, r);
+    }
+
+    void sort(Element* arr, ElementCounter n) {
+        quicksort(arr, 0, n - 1);
     }
 }
 #undef INLINE_SWAP

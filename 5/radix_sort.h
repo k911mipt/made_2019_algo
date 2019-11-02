@@ -4,7 +4,7 @@
 #include <iostream>
 #include <cassert>
 
-namespace radix_sort {
+namespace radix_inplace {
 #ifdef INLINE_SWAP
 #undef INLINE_SWAP
 #endif
@@ -98,6 +98,10 @@ namespace radix_sort {
                 }
             }
         }
+    }
+
+    void sort(Element* arr, ElementCounter n) {
+        radix_inplace::radix_sort(arr, ElementCounter(0), n, radix_inplace::shift_start - radix_inplace::shift_step);
     }
 #undef INLINE_SWAP
 }

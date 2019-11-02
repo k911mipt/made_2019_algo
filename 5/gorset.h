@@ -1,13 +1,13 @@
 #include <iostream>
 #include <cassert>
 
-namespace gorset {
-#ifdef INLINE_SWAP
-#undef INLINE_SWAP
-#endif
-#define INLINE_SWAP(a, b) {const T __SWAP_TEMP__ = a; a = b; b = __SWAP_TEMP__;}
+#include "common.h"
 
-    void insertion_sort(size_type *array, int offset, int end) {
+namespace gorset {
+    using made::Element;
+    using made::ElementCounter;
+
+    void insertion_sort(Element *array, int offset, int end) {
         int x, y, temp;
         for (x = offset; x < end; ++x) {
             for (y = x; y > offset && array[y - 1] > array[y]; y--) {
@@ -18,7 +18,7 @@ namespace gorset {
         }
     }
 
-    void radix_sort(size_type *array, int offset, int end, int shift) {
+    void radix_sort(Element *array, int offset, int end, int shift) {
         assert(offset >= 0);
         int x, y, value, temp;
         int last[256] = { 0 }, pointer[256];
@@ -62,5 +62,8 @@ namespace gorset {
             }
         }
     }
-#undef INLINE_SWAP
+    
+    void sort(Element* arr, ElementCounter n) {
+        gorset::radix_sort(arr, 0, n, 24);
+    }
 }

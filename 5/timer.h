@@ -3,51 +3,42 @@
 #define TIMER_H_
 #include <chrono>
 #include <iostream>
-#include <functional>
-//#include "custom_sort.h"
+#include <string>
+
+#include "common.h"
 
 int tests_count = 1;
+Element algo_number = 1;
+bool show_name = true;
 
-//template <class T>
-
-typedef void(*sorting_size)(size_type* arr, size_type n);
-typedef void(*sorting_range)(size_type* begin, size_type* end);
-//typedef void(*sorting_range)(size_type *_First, size_type *_Last);
-//typedef void(*std_sort)(size_type* begin, size_type* end);
-//typedef std::function<size_type*>(*std_sort)(size_type *_First, size_type *_Last);
 
 typedef long long ms;
-
 
 class Timer
 {
     using clock_t = std::chrono::high_resolution_clock;
     using microseconds = std::chrono::microseconds;
 public:
-    Timer() {
-        //std::cout << "Started timer" << std::endl;
-        start_ = clock_t::now();
-    }
-
-    ~Timer() {
-
-    }
-    auto Finish() {
+    Timer() { start_ = clock_t::now(); }
+    ~Timer() = default;
+    ms Finish() {
         const auto finish = clock_t::now();
-        const auto us =
-            std::chrono::duration_cast<microseconds>
-            (finish - start_).count();
-        //std::cout << us << " us" << std::endl;
-        return us;
+        return std::chrono::duration_cast<microseconds>(finish - start_).count();
     }
-
 private:
     clock_t::time_point start_;
 };
+using std::string;
 
-ms TimeIt(size_type* arr, size_type n, sorting_size func) {
+ms TimeIt(Element* arr, ElementCounter n, sorting_size func, const string&& name) {
+    common::test(func, true);
+    std::cout << "sorting algo " << algo_number++ << ": ";
+    if (show_name) {
+        string display_name(name); display_name.resize(20);
+        std::cout << display_name << " \t";
+    }
     ms result = 0;
-    size_type* arr_copy = new size_type[n];
+    Element* arr_copy = new Element[n];
     for (int i = 0; i < tests_count; ++i) {
         std::copy(arr, arr + n, arr_copy);
         Timer t;
@@ -55,34 +46,38 @@ ms TimeIt(size_type* arr, size_type n, sorting_size func) {
         result += t.Finish();
     }
     delete[] arr_copy;
-    return result / tests_count;
-}
-inline void output2(size_type *arr, size_type n) {
-    for (size_type i = 0; i < n; ++i, ++arr) {
-        std::cout << *arr << " ";
-    }
-    std::cout << std::endl;
+    result /= tests_count * 1000;
+    std::cout << result << std::endl;
+    return result;
 }
 
-ms TimeIt(size_type* begin, size_type* end, sorting_range func) {
+ms TimeIt(Element* begin, Element* end, sorting_range func, const string&& name) {
+    common::test(func, true);
+    std::cout << "sorting algo " << algo_number++ << ": ";
+    if (show_name) {
+        string display_name(name); display_name.resize(20);
+        std::cout << display_name << " \t";
+    }
     ms result = 0;
-    size_type n = end - begin;
+    ElementCounter size = end - begin;
+    Element* arr_copy = new Element[size];
     for (int i = 0; i < tests_count; ++i) {
-        size_type* arr_copy = new size_type[n];
         std::copy(begin, end, arr_copy);
         Timer t;
-        func(arr_copy, arr_copy + n);
-        
+        func(arr_copy, arr_copy + size);
         result += t.Finish();
-        //output2(arr_copy, n);
     }
-    return result / tests_count;
+    delete[] arr_copy;
+    result /= tests_count * 1000;
+    std::cout << result << std::endl;
+    return result;
 }
 
 template <class T>
 ms TimeItStd(T* begin, T* end) {
+    std::cout << "sorting std::sort \t";
     ms result = 0;
-    size_type n = end - begin;
+    ElementCounter n = end - begin;
     T* arr_copy = new T[n];
     for (int i = 0; i < tests_count; ++i) {
         std::copy(begin, end, arr_copy);
@@ -91,12 +86,9 @@ ms TimeItStd(T* begin, T* end) {
         result += t.Finish();
     }
     delete[] arr_copy;
-    return result / tests_count;
+    result /= tests_count * 1000;
+    std::cout << result << std::endl;
+    return result;
 }
-
-
-
-
-
 
 #endif // !TIMER_H_
