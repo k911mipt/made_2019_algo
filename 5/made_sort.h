@@ -13,6 +13,7 @@ namespace made {
     //typedef uint16_t Digit;
     typedef uint32_t Element; // 0..10^9 value range
     typedef uint32_t ElementCounter; // 0..10^7 array size
+    const uint8_t ELEMENT_SIZE = sizeof(Element);
     const uint8_t DIGIT_SIZE = sizeof(Digit);
     const uint32_t MAX_DIGIT_COUNT = 1 << (DIGIT_SIZE * 8);
     // TODO which type to use for mask? 32 or 8 bit? Check how different mask types applies
@@ -326,102 +327,7 @@ namespace made {
         }
     }
 
-    //template <class T>
-    void MSDStep(Element* arr, ElementCounter offset, ElementCounter end, uint8_t shift, Element* buffer) {
-        assert(offset >= 0);
-        ElementCounter x;
-        ElementCounter last[MAX_DIGIT_COUNT] = { 0 };
-        ElementCounter pointer[MAX_DIGIT_COUNT];
-        // count digits
-        for (x = offset; x < end; ++x) {
-            ++last[(arr[x] >> shift) & LOWER_DIGIT_MASK];
-        }
-        // count digit positions
-        last[0] += offset;
-        pointer[0] = offset;
-        for (x = 1; x < MAX_DIGIT_COUNT; ++x) {
-            pointer[x] = last[x - 1];
-            last[x] += last[x - 1];
-        }
-        // swapping elements
-        Element value;
-        ElementCounter y;
-        Element temp;
-        for (x = 0; x < MAX_DIGIT_COUNT; ++x) {
-            while (pointer[x] != last[x]) {
-                value = arr[pointer[x]];
-                y = (value >> shift) & LOWER_DIGIT_MASK;
-                while (x != y) {
-                    temp = arr[pointer[y]];
-                    arr[pointer[y]++] = value;
-                    value = temp;
-                    y = (value >> shift) & LOWER_DIGIT_MASK;
-                }
-                arr[pointer[x]++] = value;
-            }
-        }
 
-        //shift = shift / 8;
-        //const ElementCounter batch_step = end / 10;
-        //for (ElementCounter batch = 0; batch < end; ++batch) {
-        //    LSDStep(arr, batch_step, shift);
-        //}
-
-        //const ElementCounter threshold = 1024 * 1024 / 4; // 1 Mb of 1024*1024 ints
-        //if (shift > 0) {
-        //    shift -= 8;
-        //    //ElementCounter st
-        //    ElementCounter num_high_bit_sorted = pointer[0] - offset;
-        //    for (x = 1; x < MAX_DIGIT_COUNT; ++x) {
-        //        if (num_high_bit_sorted > threshold) {
-        //            MSDStep(arr, offset, offset + num_high_bit_sorted, shift);
-        //            offset += num_high_bit_sorted;
-        //            num_high_bit_sorted = 0;
-        //        }
-        //        else {
-        //            ElementCounter num_current_digit = pointer[x] - pointer[x - 1]; // число вхождений текущей цифры
-        //            if (num_high_bit_sorted + num_current_digit > threshold) {
-        //                LSDStep(arr + offset, num_high_bit_sorted, shift / 8 + 2);
-        //                offset += num_high_bit_sorted;
-        //                num_high_bit_sorted = 0;
-        //            }
-        //        }
-        //        num_high_bit_sorted += (pointer[x] - pointer[x - 1]);
-        //    }
-        //    if (num_high_bit_sorted)
-        //        LSDStep(arr + offset, num_high_bit_sorted, shift / 8 + 2);
-        //}
-
-        if (shift > 0) {
-            shift -= 8;
-            for (x = 0; x < MAX_DIGIT_COUNT; ++x) {
-                ElementCounter pX = pointer[x];
-                if (x > 0) {
-                    temp = pX - pointer[x - 1];
-                }
-                else {
-                    temp = pX - offset;
-                }
-                temp = x > 0 ? pX - pointer[x - 1] : pointer[0] - offset;
-                int temp_left = pX - temp;
-                int temp_right = pX;
-                if (temp > 1024 * 1024) { // 1MB
-                    MSDStep(arr, pX - temp, pX, shift, buffer);
-                }
-                else if (temp > 1) {
-                    //insertion_sort(arr, pointer[x] - temp, pointer[x]);
-                    LSDStep(arr + pX - temp, temp, shift / 8 + 1, buffer);
-                }
-            }
-        }
-
-    }
-
-    void MSDSort(made::Element *arr, made::ElementCounter size) {
-        Element *buffer = new Element[size];
-        made::MSDStep(arr, 0, size, 24, buffer);
-        delete buffer;
-    }
 
     void _radix_sort_lsb(Element *begin, Element *end, Element *begin1, Element maxshift)
     {
@@ -457,6 +363,66 @@ namespace made {
         }
     }
 
+    void LSB(Element *begin, ElementCounter size, Element *buffer, Element maxshift);
+    void MSDStep(Element* arr, ElementCounter offset, ElementCounter end, uint8_t shift, Element* buffer) {
+        assert(offset >= 0);
+        ElementCounter x;
+        ElementCounter last[MAX_DIGIT_COUNT] = { 0 };
+        ElementCounter pointer[MAX_DIGIT_COUNT];
+        // count digits
+        for (x = offset; x < end; ++x) {
+            ++last[(arr[x] >> shift) & LOWER_DIGIT_MASK];
+        }
+        // count digit positions
+        last[0] += offset;
+        pointer[0] = offset;
+        for (x = 1; x < MAX_DIGIT_COUNT; ++x) {
+            pointer[x] = last[x - 1];
+            last[x] += last[x - 1];
+        }
+        // swapping elements
+        Element value;
+        ElementCounter y;
+        Element temp;
+        for (x = 0; x < MAX_DIGIT_COUNT; ++x) {
+            while (pointer[x] != last[x]) {
+                value = arr[pointer[x]];
+                y = (value >> shift) & LOWER_DIGIT_MASK;
+                while (x != y) {
+                    temp = arr[pointer[y]];
+                    arr[pointer[y]++] = value;
+                    value = temp;
+                    y = (value >> shift) & LOWER_DIGIT_MASK;
+                }
+                arr[pointer[x]++] = value;
+            }
+        }
+
+        if (shift > 0) {
+            shift -= 8;
+            for (x = 0; x < MAX_DIGIT_COUNT; ++x) {
+                ElementCounter pX = pointer[x];
+                temp = x > 0 ? pX - pointer[x - 1] : pX - offset;
+                if (temp > 1) {
+                    //insertion_sort(arr, pointer[x] - temp, pointer[x]);
+                    // LSDStep(arr + pX - temp, temp, shift / 8 + 1, buffer);
+                    // _radix_sort_lsb(arr + (pX - temp), arr + temp, buffer + (pX - temp), shift);
+                    LSB(arr + pX - temp, temp, buffer + (pX - temp), shift);
+                    // _radix_sort_lsb(obucket[i], bucket[i], begin + (obucket[i] - begin1), shift - 8);
+                    // LSDStep(obucket[i], bucket[i] - obucket[i], shift / 8 + 1, begin + (obucket[i] - begin1));
+                }
+            }
+            memcpy(arr, buffer, (end - offset) * 4);
+        }
+
+    }
+
+    void MSDSort(made::Element *arr, made::ElementCounter size) {
+        Element *buffer = new Element[size];
+        made::MSDStep(arr, 0, size, 24, buffer);
+        delete buffer;
+    }
+
     void _radix_sort_msb(Element *begin, Element *end, Element *begin1, Element shift)
     {
         //unsigned *end1 = begin1 + (end - begin);
@@ -471,7 +437,7 @@ namespace made {
             *bucket[(*p >> shift) & 0xFF]++ = *p;
         for (int i = 0; i < 0x100; ++i)
             _radix_sort_lsb(obucket[i], bucket[i], begin + (obucket[i] - begin1), shift - 8);
-        //for (int i = 0; i < 0x100; ++i)
+        // for (int i = 0; i < 0x100; ++i)
         //    LSDStep(obucket[i], bucket[i] - obucket[i], shift / 8 + 1, begin + (obucket[i] - begin1));
 
     }

@@ -24,7 +24,7 @@ namespace award_parsed
       For a list of all optimizations implemented check the github README.md
       over at https://github.com/AwardOfSky/Fast-Radix-Sort
      */
-void award_of_sky_sort(register int vector[], register unsigned int size)
+void award_of_sky_sort(int vector[], unsigned int size)
 {
 
     /* Support for variable sized integers without overflow warnings */
@@ -33,11 +33,11 @@ void award_of_sky_sort(register int vector[], register unsigned int size)
 
     /* Check for max and min integer in [a, b[ array segment */
 
-    register int *helper;          /* Helper array */
-    register int *s, *k, i;        /* Array iterators */
-    register int exp = *vector;    /* Bits sorted */
-    register int max = exp;        /* Maximun range in array */
-    register unsigned char *n, *m; /* Iterator of a byte within an integer */
+    int *helper;          /* Helper array */
+    int *s, *k, i;        /* Array iterators */
+    int exp = *vector;    /* Bits sorted */
+    int max = exp;        /* Maximun range in array */
+    unsigned char *n, *m; /* Iterator of a byte within an integer */
     int swap = 0;                  /* Tells where sorted array is (if, sorted is in vector) */
     int last_byte_sorted = 0;      /* 1 if we had to sort the last byte */
     int next = 0;                  /* If 1 we skip the byte (all buckets are the same) */
@@ -232,7 +232,7 @@ void award_of_sky_sort(register int vector[], register unsigned int size)
         }
 
         /* 2nd subdivision only for 3 bytes or more (and size > 512M) */
-        register int j;
+        int j;
         if (bytes_to_sort > 1 && size > 512000000)
         {
 
@@ -250,7 +250,7 @@ void award_of_sky_sort(register int vector[], register unsigned int size)
                 swap = swap_copy;
 
                 /* Define temporary vector and helper according to current swap*/
-                register int *sub_help, *sub_vec;
+                int *sub_help, *sub_vec;
                 if (swap)
                 {
                     sub_vec = old_point[j];
@@ -384,7 +384,7 @@ void award_of_sky_sort(register int vector[], register unsigned int size)
 
                 /* Define temp arrays according to wether the first MSB byte */
                 /* was sorted or not (array pointed by old_point_2msb changes) */
-                register int *sub_help, *sub_vec;
+                int *sub_help, *sub_vec;
                 if (swap_copy)
                 {
                     sub_vec = old_point_2msb[j];
@@ -692,7 +692,7 @@ void award_of_sky_sort(register int vector[], register unsigned int size)
                 size = point[j] - old_point[j];
                 swap = swap_copy;
 
-                register int *sub_help, *sub_vec; /* Temprary arrays */
+                int *sub_help, *sub_vec; /* Temprary arrays */
                 if (swap)
                 {
                     sub_help = vector + (old_point[j] - helper);
@@ -1344,7 +1344,7 @@ void award_of_sky_sort(register int vector[], register unsigned int size)
     /* Free helper array */
     free(helper);
 }
-void award_of_sky_sort(register uint32_t vector[], register unsigned int size)
+void award_of_sky_sort(uint32_t vector[], unsigned int size)
 {
     award_of_sky_sort((int *)vector, size);
 }

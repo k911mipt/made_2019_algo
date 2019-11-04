@@ -5,19 +5,26 @@
 #include <random>
 #include <cassert>
 #include <iostream>
+#include <algorithm>
 #include "sort.h"
+#include "k911mipt_avx.h"
 
-namespace made {
-    typedef uint8_t Digit;
-    //typedef uint16_t Digit;
-    typedef uint32_t Element; // 0..10^9 value range
-    typedef uint32_t ElementCounter; // 0..10^7 array size
-    const uint8_t DIGIT_SIZE = sizeof(Digit);
-    const uint32_t MAX_DIGIT_COUNT = 1 << (DIGIT_SIZE * 8);
-    // TODO which type to use for mask? 32 or 8 bit? Check how different mask types applies
-    const Element LOWER_DIGIT_MASK = MAX_DIGIT_COUNT - 1; // digit = 1 byte: 0xFF, digit = 2 byte: 0xFFFF, etc.;
-}
+// namespace made {
+//     const uint32_t L1_SIZE = 64 * 1024; // 64 KB // 2^16 = 16384 integers
+//     const uint32_t L2_SIZE = 2 * 1024 * 1024; // 2 MB 2^19 = 524288 integers
+//     const uint32_t L3_SIZE = 20 * 1024 * 1024; // 20 MB = 20 * 2^20 = 20971520 integers
 
+//     typedef uint8_t Digit;
+//     // typedef uint_fast8_t Digit;
+//     //typedef uint16_t Digit;
+//     typedef uint_fast32_t Element; // 0..10^9 value range
+//     typedef uint_fast32_t ElementCounter; // 0..10^7 array size
+//     typedef uint_fast32_t FE;
+//     const uint8_t ELEMENT_SIZE = sizeof(Element);
+//     const uint8_t DIGIT_SIZE = sizeof(Digit);
+//     const uint32_t MAX_DIGIT_COUNT = 1 << (DIGIT_SIZE * 8);
+//     const Element LOWER_DIGIT_MASK = MAX_DIGIT_COUNT - 1; // digit = 1 byte: 0xFF, digit = 2 byte: 0xFFFF, etc.;
+// }
 using made::Element;
 using made::ElementCounter;
 
@@ -34,7 +41,8 @@ namespace common {
     inline void generate(Element *arr, ElementCounter n, bool silent = false, ElementCounter range = MAX_VALUE) {
         if (!silent) std::cout << "generating " << n << " randoms in range " << 0 << "-" << range << std::endl;
         std::default_random_engine generator;
-        std::uniform_int_distribution<ElementCounter> distribution(0, range);
+        range = 1000000000;
+        std::uniform_int_distribution<ElementCounter> distribution(16777216, range);
         for (Element* end = arr + n; arr < end; ++arr) {
             *arr = distribution(generator);
         }

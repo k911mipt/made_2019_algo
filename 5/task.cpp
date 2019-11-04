@@ -5,12 +5,14 @@
 #include "three_way.h"
 #include "made_sort.h"
 #include "k911mipt_sort.h"
+#include "k911mipt_avx.h"
 
 
 #include "award_of_sky_parsed.h"
 //#include "award_of_sky.h"
 //#include "radix_sort.h"
 //#include "gorset.h"
+//#include "n_log_log_n.h"
 //#include "radix_extra_memory.h"
 //#include "custom_radix_extra_memory.h"
 //#include "three_way.h"
@@ -20,22 +22,66 @@
 using namespace common;
 using namespace made;
 
-void run_tests() {
-    test(made::k9_sort);
-}
 
+//void nloglogn(Element *arr, ElementCounter n)
+//{
+//    //int n = 0;   /* Number of elements */
+//    word x;
+//    list head, tail, temp;
+//    //clock_t startclock, stopclock;
+//
+//
+//    head = NULL;
+//    for (ElementCounter i = 0; i < n; ++i) {
+//    //while (fscanf(in_file, "%i", &x) != EOF) {
+//        temp = (list)malloc(sizeof(struct listrec));
+//        temp->K = arr[i];
+//        temp->next = NULL;
+//        AddToTail(temp, &head, &tail);
+//    }
+//
+//    //startclock = clock();
+//    head = Sort(head, n, W);
+//    //stopclock = clock();
+//
+//    //for (; head; head = head->next)
+//    //    printf("%i\n", head->K);
+//    for (ElementCounter i = 0; i < n; ++i, head = head->next) {
+//        arr[i] = head->K; 
+//    }
+//
+//    //fprintf(stderr, "%s%.2f%s\n", "Time: ",
+//    //    (stopclock - startclock) / (float)CLOCKS_PER_SEC,
+//    //    " sec.");
+//    //return 0;
+//}
+
+void run_tests() {
+    //test(made::k9_sort);
+    //common::test_size = 25000000;
+    common::test_size = 100;
+    //test(nloglogn);
+    test(made::avx::k9_sort);
+    common::test_size = 10000;
+    //test(made::avx::k9_sort);
+}
 int main() {
-    run_tests();
+     run_tests();
     tests_count = 1;
     ElementCounter n = 25000000;
     Element* arr = new Element[n];
     generate(arr, n);
     //TimeItStd(arr, arr + n);
-    //show_name = false;
-    TimeIt(arr, n, award_parsed::award_of_sky_sort, "award_of_sky");
+    // show_name = false;
+    //TimeIt(arr, n, gorset::sort, "gorset");
+    //test_size = 25000000;
+    TimeIt(arr, n, made::avx::k9_sort, "k9_avx");
+    //test_size = 10000;
     TimeIt(arr, n, made::k9_sort, "k9_sort");
+    TimeIt(arr, n, award_parsed::award_of_sky_sort, "award_of_sky");
+    // TimeIt(arr, n, made::MSDSort, "MSD_LSD");
     TimeIt(arr, n, made::radix_sort, "mixed_radix");
-    //TimeIt(arr, n, made::MSDSort, "MSD_LSD");
+
     //TimeIt(arr, n, made::LSDSort, "LSD");
     //TimeIt(arr, n, radix_inplace::sort, "radix_inplace");
     //TimeIt(arr, n, gorset::sort, "gorset");
