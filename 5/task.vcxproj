@@ -264,6 +264,7 @@
     <ClInclude Include="custom_radix_extra_memory.h" />
     <ClInclude Include="custom_sort.h" />
     <ClInclude Include="gorset.h" />
+    <ClInclude Include="k911mipt_avx.h" />
     <ClInclude Include="k911mipt_sort.h" />
     <ClInclude Include="made_sort.h" />
     <ClInclude Include="n_log_log_n.h" />
