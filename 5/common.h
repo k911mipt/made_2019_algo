@@ -42,7 +42,9 @@ namespace common {
         if (!silent) std::cout << "generating " << n << " randoms in range " << 0 << "-" << range << std::endl;
         std::default_random_engine generator;
         range = 1000000000;
-        std::uniform_int_distribution<ElementCounter> distribution(16777216, range);
+        // std::uniform_int_distribution<ElementCounter> distribution(16777216, range);
+        std::uniform_int_distribution<ElementCounter> distribution(0, range);
+        // std::uniform_int_distribution<ElementCounter> distribution(0, 100);
         for (Element* end = arr + n; arr < end; ++arr) {
             *arr = distribution(generator);
         }

@@ -3,7 +3,6 @@
 
 #include "common.h"
 #include <cassert>
-#define UNROL_LOOP 1
 namespace made {
     void LSB(Element *begin, ElementCounter size, Element *buffer, Element maxshift) {
         Element *end = begin + size;

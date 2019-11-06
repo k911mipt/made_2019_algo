@@ -158,6 +158,9 @@
       <ConformanceMode>true</ConformanceMode>
       <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);DEBUG</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <PreprocessToFile>true</PreprocessToFile>
+      <PreprocessSuppressLineNumbers>true</PreprocessSuppressLineNumbers>
+      <PreprocessKeepComments>true</PreprocessKeepComments>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -196,6 +199,9 @@
       <ConformanceMode>true</ConformanceMode>
       <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);DEBUG</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <PreprocessToFile>true</PreprocessToFile>
+      <PreprocessSuppressLineNumbers>true</PreprocessSuppressLineNumbers>
+      <PreprocessKeepComments>true</PreprocessKeepComments>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -266,6 +272,7 @@
     <ClInclude Include="gorset.h" />
     <ClInclude Include="k911mipt_avx.h" />
     <ClInclude Include="k911mipt_sort.h" />
+    <ClInclude Include="k9_sort_class.h" />
     <ClInclude Include="made_sort.h" />
     <ClInclude Include="n_log_log_n.h" />
     <ClInclude Include="partition.h" />
