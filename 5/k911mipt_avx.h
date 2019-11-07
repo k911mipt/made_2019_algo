@@ -1,13 +1,9 @@
 ﻿#ifndef K9_AVX_H_
 #define K9_AVX_H_
 
-//#include "common.h"
 #include "sort.h"
 #include "stdint.h"
-//#include <algorithm>
 #include <cstring>
-//#include <cassert>
-//#include "timer.h"
 
 const int tab32[32] = {
      0,  9,  1, 10, 13, 21,  2, 29,
@@ -48,6 +44,11 @@ namespace made {
     const ElementCounter L1_CACHE_SIZE = 32 * 8 * 1024; // 256 KB // 2^16 = 65536 integers
     const ElementCounter L2_CACHE_SIZE = 2 * 1024 * 1024; // 2 MB 2^19 = 524288 integers
     const ElementCounter L3_CACHE_SIZE = 20 * 1024 * 1024; // 20 MB = 20 * 2^20 = 5242880 integers
+    static Element *const_buffer = nullptr;
+    static bool allocated = false;
+    //const Element *const_buffer = (Element *)malloc(sizeof(Element) * 25000000);
+    //Element *const_buffer = new Element[25000000];// (Element *)malloc(sizeof(Element) * 25000000);
+
 }
 
 #define INLINE_SWAP(a, b) {const Element __SWAP_TEMP__ = a; a = b; b = __SWAP_TEMP__;}
@@ -1074,28 +1075,12 @@ namespace made {
 
         void k9_sort(Element *begin, ElementCounter size) {
             //FE highest_bit = log2_32(size * 4) + 1;
-            //if (highest_bit < 9) {
-            //    Element *buffer = (Element *)malloc(sizeof(Element) * size);
-            //    LSB1(begin, size, buffer);
-            //    memcpy(begin, buffer, size * sizeof(Element));
-            //    free(buffer);
-            //} else if (highest_bit < 25) {
-            //    FE last_bits = (highest_bit & (~0 << 3)) - 1; // -1 just in case to not have too small buffer
-            //    FE size_decrease = 1 << last_bits;
-            //    FE small_size = size / size_decrease;
-            //    //Element *buffer = (Element *)malloc(sizeof(Element) * size);
-            //    //Element *buffer = (Element *)malloc(sizeof(Element) * small_size);
-            //    MSB_inplace_3(begin, size);
-            //    //MSB_extra_mem_3(begin, size, buffer);
-            //    //memcpy(begin, buffer, size * sizeof(Element));
-            //    //free(buffer);
-            //} else {
-            //    Element *buffer = (Element *)malloc(sizeof(Element) * size);
-            //    // bruteforce::MSB4(begin, size, buffer);// currently da best
-            //    MSB_extra_mem_4(begin, size, buffer);// currently da best
-            //    free(buffer);
-            //}
-            Element *buffer = (Element *)malloc(sizeof(Element) * size);
+            //Element *buffer = (Element *)malloc(sizeof(Element) * size);
+            if (!allocated) {
+                allocated = true;
+                const_buffer = (Element *)malloc(sizeof(Element) * 25000000);
+            }
+            Element *buffer = const_buffer;
             if (size < 1000) {
                 LSB1(begin, size, buffer);
                 memcpy(begin, buffer, size * sizeof(Element));
@@ -1109,18 +1094,7 @@ namespace made {
                 //MSB_extra_mem_4(begin, size, buffer);// currently da best
                 MSB_extra_mem_4_sheet(begin, size, buffer);// currently da best
             }
-            free(buffer);
-            //if (size < 1000) {
-            //    LSB_1(begin, size, buffer);
-            //    memcpy(begin, buffer, size * sizeof(Element));
-            //} else if (size < 12000000) {
-            //    MSB_extra_mem_3(begin, size, buffer);
-            //    memcpy(begin, buffer, size * sizeof(Element));
-            //} else {
-            //    // bruteforce::MSB4(begin, size, buffer);// currently da best
-            //    MSB_extra_mem_4(begin, size, buffer);// currently da best
-            //}
-            //memcpy(buffer, begin, size * sizeof(Element));
+            //free(buffer);
         }
     }
 
