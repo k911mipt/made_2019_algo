@@ -4,9 +4,9 @@
 //#include "common.h"
 #include "sort.h"
 #include "stdint.h"
-#include <algorithm>
+//#include <algorithm>
 #include <cstring>
-#include <cassert>
+//#include <cassert>
 //#include "timer.h"
 
 const int tab32[32] = {
@@ -15,7 +15,7 @@ const int tab32[32] = {
      8, 12, 20, 28, 15, 17, 24,  7,
     19, 27, 23,  6, 26,  5,  4, 31 };
 
-inline int log2_32(uint32_t value) {
+inline int log2_32(uint32_t value){
     value |= value >> 1;
     value |= value >> 2;
     value |= value >> 4;
@@ -29,21 +29,20 @@ namespace made {
     //typedef uint_fast8_t Digit;
     //typedef uint32_t Digit;
     //typedef uint16_t Digit;
-    // typedef uint32_t Element; // 0..10^9 value range
+    //typedef uint32_t Element; // 0..10^9 value range
     // typedef uint32_t ElementCounter; // 0..10^7 array size
     typedef unsigned int Element; // 0..10^9 value range
     typedef unsigned int ElementCounter; // 0..10^7 array size
+    typedef uint16_t Digit2Byte;
     typedef uint_fast32_t FE;
-    //typedef uint32_t FE;
     const uint_fast8_t ELEMENT_SIZE = sizeof(Element);
     const uint_fast8_t DIGIT_SIZE = sizeof(Digit);
     const uint_fast32_t MAX_DIGIT_COUNT = 1 << (DIGIT_SIZE * 8);
     const uint_fast32_t LOWER_DIGIT_MASK = MAX_DIGIT_COUNT - 1; // digit = 1 byte: 0xFF, digit = 2 byte: 0xFFFF, etc.;
-
-    typedef uint16_t Digit2Byte;
     const uint_fast8_t DIGIT_2BYTE_SIZE = sizeof(Digit2Byte);
     const uint_fast32_t MAX_DIGIT_2BYTE_COUNT = 1 << (DIGIT_2BYTE_SIZE * 8);
     const uint_fast8_t DIGIT_2BYTE_STEP = ELEMENT_SIZE / DIGIT_2BYTE_SIZE;
+    //typedef uint32_t FE;
     //const ElementCounter L1_CACHE_SIZE = 32 * 1024; // 32 KB // 2^13 = 8192 integers
     //const ElementCounter L1_CACHE_SIZE = 64 * 1024; // 64 KB // 2^14 = 16384 integers
     const ElementCounter L1_CACHE_SIZE = 32 * 8 * 1024; // 256 KB // 2^16 = 65536 integers
@@ -51,6 +50,7 @@ namespace made {
     const ElementCounter L3_CACHE_SIZE = 20 * 1024 * 1024; // 20 MB = 20 * 2^20 = 5242880 integers
 }
 
+#define INLINE_SWAP(a, b) {const Element __SWAP_TEMP__ = a; a = b; b = __SWAP_TEMP__;}
 
 #define UNROL_LOOP(begin, size, digit_number, TIterator, iterator, additional_initializers, body)\
     {uint_fast32_t size_trunc_8 = (size) & (~0 << 3);\
@@ -60,7 +60,7 @@ namespace made {
     for (; iterator < dend;) { body; body; body; body; body; body; body; body; }\
     for (dend = (TIterator)((begin) + (size)); iterator < dend;) { body; }}
 
-#define SORT_DIGIT(begin, size, buffer, digit_size, shift)\
+ #define SORT_DIGIT(begin, size, buffer, digit_size, shift)\
             const FE DIGIT_AMOUNT = 1 << (digit_size);\
             const FE DIGIT_MASK = DIGIT_AMOUNT - 1;\
             FE count[DIGIT_AMOUNT] = { 0 };\
@@ -69,7 +69,7 @@ namespace made {
             /*Calculating places*/UNROL_LOOP(0, DIGIT_AMOUNT, 0, FE, i, Element *q = (buffer); , pends[i] = q; q += count[i++]);\
             /*Sorting - moving to ordered places*/UNROL_LOOP((begin), (size), 0, Element*, dp, , *pends[(*dp >> shift) & DIGIT_MASK]++ = *dp; dp++;);\
 
-// bool skiped = false;\
+            // bool skiped = false;\
             //for (FE i = 0; i < DIGIT_AMOUNT; ++i) {skiped = skiped || (count[i] == size);}\
             // if (!skiped) {\
             ///*Calculating places*/UNROL_LOOP(0, DIGIT_AMOUNT, 0, FE, i, Element *q = (buffer); , pends[i] = q; q += count[i++]);\
@@ -83,39 +83,39 @@ namespace made {
             FE D1, D2, D3, D4;
             FE D1shift, D2shift, D3shift, D4shift;
         };
-        const dnums nums = { 8, 8, 8, 6, 0, 8, 16, 24 };
+        const dnums nums = {9, 9, 5, 7, 0, 9, 18, 23};
         void LSB_1_2(Element *begin, ElementCounter size, Element *buffer) {
-            {SORT_DIGIT(begin, size, buffer, nums.D1, nums.D1shift); }
-            {SORT_DIGIT(buffer, size, begin, nums.D2, nums.D2shift); }
+            {SORT_DIGIT(begin, size, buffer, nums.D1, nums.D1shift);}
+            {SORT_DIGIT(buffer, size, begin, nums.D2, nums.D2shift);}
         }
         void LSB_3times(Element *begin, ElementCounter size, Element *buffer) {
-            {SORT_DIGIT(begin, size, buffer, nums.D1, nums.D1shift); }
-            {SORT_DIGIT(buffer, size, begin, nums.D2, nums.D2shift); }
-            {SORT_DIGIT(begin, size, buffer, nums.D1, nums.D1shift); }
+            {SORT_DIGIT(begin, size, buffer, nums.D1, nums.D1shift);}
+            {SORT_DIGIT(buffer, size, begin, nums.D2, nums.D2shift);}
+            {SORT_DIGIT(begin, size, buffer, nums.D3, nums.D3shift);}
         }
         void MSB3(Element *begin, ElementCounter size, Element *buffer) {
             SORT_DIGIT(begin, size, buffer, nums.D3, nums.D3shift)
-                for (FE i = 0; i < DIGIT_AMOUNT; ++i) {/*for each digit call subsort*/
-                    ElementCounter sub_size = count[i];
-                    if (sub_size != 0) {// skipping empty buckets
-                        Element *pend = pends[i];
-                        Element *pstart = pend - sub_size;
-                        LSB_1_2(pstart, sub_size, begin + (pstart - buffer));
-                    }
+            for (FE i = 0; i < DIGIT_AMOUNT; ++i) {/*for each digit call subsort*/
+                ElementCounter sub_size = count[i];
+                if (sub_size != 0) {// skipping empty buckets
+                    Element *pend = pends[i];
+                    Element *pstart = pend - sub_size;
+                    LSB_1_2(pstart, sub_size, begin);
                 }
+            }
         }
 
         void MSB4(Element *begin, ElementCounter size, Element *buffer) {
             SORT_DIGIT(begin, size, buffer, nums.D4, nums.D4shift)
-                for (FE i = 0; i < DIGIT_AMOUNT; ++i) {/*for each digit call subsort*/
-                    ElementCounter sub_size = count[i];
-                    if (sub_size != 0) {// skipping empty buckets
-                        Element *pend = pends[i];
-                        Element *pstart = pend - sub_size;
-                        MSB3(pstart, sub_size, begin + (pstart - buffer));
-                        //LSB_3times(pstart, sub_size, begin + (pstart - buffer));
-                    }
+            for (FE i = 0; i < DIGIT_AMOUNT; ++i) {/*for each digit call subsort*/
+                ElementCounter sub_size = count[i];
+                if (sub_size != 0) {// skipping empty buckets
+                    Element *pend = pends[i];
+                    Element *pstart = pend - sub_size;
+                    MSB3(pstart, sub_size, begin + (pstart - buffer));
+                    //LSB_3times(pstart, sub_size, begin + (pstart - buffer));
                 }
+            }
         }
         void MSBCaller(Element *begin, ElementCounter size) {
             Element *buffer = (Element *)malloc(sizeof(Element) * size);
@@ -125,6 +125,10 @@ namespace made {
     }
 
     namespace avx {
+        const FE max_digits = 3;
+        FE counts[max_digits][MAX_DIGIT_COUNT] = { 0 }; // when needed, expand to 3
+        Element *pends_arr[max_digits][MAX_DIGIT_COUNT];
+
         void LSB(Element *begin, ElementCounter size, Element *buffer, Element maxshift) {
             Element *end = begin + size;
             FE count[MAX_DIGIT_COUNT];
@@ -148,7 +152,7 @@ namespace made {
                 for (dp = (Digit*)(begin + (size & (~0 << 3))) + (shift >> 3), dend = (Digit*)(begin + size); dp < dend;) {
                     ++count[*dp]; dp += ELEMENT_SIZE;
                 }
-                //for (Element shift = 0; shift <= maxshift; shift += 8) {
+            //for (Element shift = 0; shift <= maxshift; shift += 8) {
                 Element *q = buffer;
                 for (ElementCounter i = 0; i < MAX_DIGIT_COUNT; q += count[i++]) {
                     pends[i] = q;
@@ -174,6 +178,22 @@ namespace made {
             }
         }
 
+        void LSB_1(Element *begin, ElementCounter size, Element *buffer) {
+            const FE DIGIT_AMOUNT = MAX_DIGIT_COUNT;
+            FE(&count)[DIGIT_AMOUNT] = counts[0];
+            std::memset(count, 0, sizeof(count));
+            Element*(&pends)[DIGIT_AMOUNT] = pends_arr[0];
+            // FE count[DIGIT_AMOUNT] = { 0 };
+            // Element *pends[DIGIT_AMOUNT];
+            const FE num_digit = 0;
+            /*Counting amounts*/
+            UNROL_LOOP(begin, size, num_digit, Digit*, dp, , ++count[*dp]; dp += ELEMENT_SIZE;);
+            /*Calculating places*/
+            UNROL_LOOP(0, DIGIT_AMOUNT, 0, FE, i, Element *q = buffer; , pends[i] = q; q += count[i++]);
+            /*Sorting - moving to ordered places*/
+            UNROL_LOOP(begin, size, 0, Element*, arr_ptr, Digit *dp = (Digit*)(begin)+num_digit;, *pends[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;);
+        }
+
         void LSB1(Element *begin, ElementCounter size, Element *buffer) {
             FE size_trunc_8 = size & (~0 << 3);
             FE count[MAX_DIGIT_COUNT] = { 0 };
@@ -191,7 +211,7 @@ namespace made {
                     ++count[*dp0]; dp0 += ELEMENT_SIZE;
                     ++count[*dp0]; dp0 += ELEMENT_SIZE;
                 }
-                for (dp0 = (Digit*)(begin + size_trunc_8), dend = (Digit*)(begin + size); dp0 < dend;) {
+                for (dend = (Digit*)(begin + size); dp0 < dend;) {
                     ++count[*dp0]; dp0 += ELEMENT_SIZE;
                 }}
             /*Calculating places*/ {
@@ -220,7 +240,7 @@ namespace made {
                     *pends[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
                     *pends[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
                 }
-                for (arr_ptr = begin + size_trunc_8, arr_end = begin + size; arr_ptr < arr_end;) {
+                for (arr_end = begin + size; arr_ptr < arr_end;) {
                     *pends[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
                 }
             }
@@ -229,10 +249,12 @@ namespace made {
         void LSB2(Element *begin, ElementCounter size, Element *buffer) {
             FE size_trunc_8 = size & (~0 << 3);
             const Digit num_digits = 2;
-            FE counts[num_digits][MAX_DIGIT_COUNT] = { 0 };
+            // FE counts[num_digits][MAX_DIGIT_COUNT] = { 0 };
             FE(&count0)[MAX_DIGIT_COUNT] = counts[0];
             FE(&count1)[MAX_DIGIT_COUNT] = counts[1];
-            Element *pends_arr[num_digits][MAX_DIGIT_COUNT];
+            std::memset(count0, 0, sizeof(count0));
+            std::memset(count1, 0, sizeof(count1));
+            // Element *pends_arr[num_digits][MAX_DIGIT_COUNT];
             /*Counting amounts*/ {
                 Digit *dp0 = (Digit*)(begin), *dp1 = (Digit*)(begin)+1;
                 Digit *dend = (Digit*)(begin + size_trunc_8);
@@ -248,7 +270,8 @@ namespace made {
                 }
                 for (dend = (Digit*)(begin + size); dp0 < dend;) {
                     ++count0[*dp0]; dp0 += ELEMENT_SIZE; ++count1[*dp1]; dp1 += ELEMENT_SIZE;
-                }}
+                }
+            }
             /*Calculating places*/ {
                 Element*(&pend0)[MAX_DIGIT_COUNT] = pends_arr[0];
                 Element*(&pend1)[MAX_DIGIT_COUNT] = pends_arr[1];
@@ -263,27 +286,46 @@ namespace made {
                     pend0[i] = q0; q0 += count0[i]; pend1[i] = q1; q1 += count1[i++];
                     pend0[i] = q0; q0 += count0[i]; pend1[i] = q1; q1 += count1[i++];
                 }}
-            /*Sorting - moving to ordered places*/ {
-                for (FE i = 0; i < num_digits; ++i) {
-                    Element *arr_ptr = begin;
-                    Element *arr_end = begin + size_trunc_8;
-                    Element*(&pend)[MAX_DIGIT_COUNT] = pends_arr[i];
-                    Digit *dp = (Digit*)(begin)+i;
-                    for (; arr_ptr < arr_end;) {
-                        *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
-                        *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
-                        *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
-                        *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
-                        *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
-                        *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
-                        *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
-                        *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
-                    }
-                    for (arr_ptr = begin + size_trunc_8, arr_end = begin + size; arr_ptr < arr_end;) {
-                        *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
-                    }
-                    std::swap(begin, buffer);
-                }}
+            //Sorting - moving to ordered places
+            Element *arr_ptr = begin;
+            Element *arr_end = begin + size_trunc_8;
+            Digit *dp = (Digit*)(begin)+0;
+            {
+                Element*(&pend)[MAX_DIGIT_COUNT] = pends_arr[0];
+                for (; arr_ptr < arr_end;) {
+                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                }
+                for (arr_ptr = begin + size_trunc_8, arr_end = begin + size; arr_ptr < arr_end;) {
+                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                }
+            }
+            Element *temp = begin; begin = buffer; buffer = temp;
+            arr_ptr = begin;
+            arr_end = begin + size_trunc_8;
+            dp = (Digit*)(begin)+1;
+            {
+                Element*(&pend)[MAX_DIGIT_COUNT] = pends_arr[1];
+                for (; arr_ptr < arr_end;) {
+                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                }
+                for (arr_ptr = begin + size_trunc_8, arr_end = begin + size; arr_ptr < arr_end;) {
+                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                }
+            }
         }
 
         void LSB3(Element *begin, ElementCounter size, Element *buffer) {
@@ -349,8 +391,11 @@ namespace made {
         }
 
         void MSB_extra_mem_2(Element *begin, ElementCounter size, Element *buffer) {
-            FE count[MAX_DIGIT_COUNT] = { 0 };
-            Element *pends[MAX_DIGIT_COUNT];
+            FE(&count)[MAX_DIGIT_COUNT] = counts[0];
+            std::memset(count, 0, sizeof(count));
+            Element*(&pends)[MAX_DIGIT_COUNT] = pends_arr[0];
+            // FE count[MAX_DIGIT_COUNT] = { 0 };
+            // Element *pends[MAX_DIGIT_COUNT];
             const FE size_trunc_8 = size & (~0 << 3);
             const FE shift = 8;
             const FE num_digit = shift >> 3;
@@ -411,8 +456,393 @@ namespace made {
                 }}
         }
 
+        void InsertionSort(Element* begin, Element* end) {
+            Element* j;
+            for (Element* i = begin + 1; i < end; ++i) {
+                j = i - 1;
+                while ((j >= begin) && (*j > *(j + 1))) {
+                    INLINE_SWAP(*j, *(j + 1));
+                    --j;
+                }
+            }
+        }
+
+        void MSB_inplace_1_full(Element *begin, ElementCounter size) {
+            FE count[MAX_DIGIT_COUNT] = { 0 };
+            Element *pends[MAX_DIGIT_COUNT];
+            Element *pstarts[MAX_DIGIT_COUNT];
+            const FE shift = 0;
+            const FE num_digit = shift >> 3;
+            //Counting amounts
+            UNROL_LOOP(begin, size, num_digit, Digit*, dp, Element *arr_ptr = begin;, ++count[*dp]; dp += ELEMENT_SIZE;);
+            //Calculating places*/
+            UNROL_LOOP(0, MAX_DIGIT_COUNT, 0, FE, i, Element *q = begin;,
+                pstarts[i] = q; q += count[i]; pends[i++] = q;);
+            /*Sorting inplace - moving to ordered places*/ {
+                for (FE i = 0; i < MAX_DIGIT_COUNT; ++i) {
+                    while (pstarts[i] != pends[i]) {
+                        FE value = *pstarts[i];
+                        FE y = (value >> shift) & LOWER_DIGIT_MASK;
+                        while (i != y) {
+                            FE temp = *pstarts[y];
+                            *(pstarts[y]++) = value;
+                            value = temp;
+                            y = (value >> shift) & LOWER_DIGIT_MASK;
+                        }
+                        *(pstarts[i]++) = value;
+                    }
+                }}
+
+        }
+
+        void MSB_inplace_2_full(Element *begin, ElementCounter size) {
+            FE count[MAX_DIGIT_COUNT] = { 0 };
+            Element *pends[MAX_DIGIT_COUNT];
+            Element *pstarts[MAX_DIGIT_COUNT];
+            const FE shift = 8;
+            const FE num_digit = shift >> 3;
+            //Counting amounts
+            UNROL_LOOP(begin, size, num_digit, Digit*, dp, Element *arr_ptr = begin;, ++count[*dp]; dp += ELEMENT_SIZE;);
+            //Calculating places*/
+            UNROL_LOOP(0, MAX_DIGIT_COUNT, 0, FE, i, Element *q = begin;,
+                pstarts[i] = q; q += count[i]; pends[i++] = q;);
+            /*Sorting inplace - moving to ordered places*/ {
+                for (FE i = 0; i < MAX_DIGIT_COUNT; ++i) {
+                    while (pstarts[i] != pends[i]) {
+                        FE value = *pstarts[i];
+                        FE y = (value >> shift) & LOWER_DIGIT_MASK;
+                        while (i != y) {
+                            FE temp = *pstarts[y];
+                            *(pstarts[y]++) = value;
+                            value = temp;
+                            y = (value >> shift) & LOWER_DIGIT_MASK;
+                        }
+                        *(pstarts[i]++) = value;
+                    }
+                }
+            }
+            /*for each digit call subsort in LSB order*/ {
+                for (FE i = 0; i < MAX_DIGIT_COUNT; ++i) {
+                    ElementCounter sub_size = count[i];
+                    if (sub_size != 0) {// skipping empty buckets
+                        Element *pend = pends[i];
+                        Element *pstart = pend - sub_size;
+                        if (sub_size > 16)
+                            MSB_inplace_1_full(pstart, sub_size);
+                        else
+                            InsertionSort(pstart, pend);
+                    }
+                }}
+        }
+
+        void MSB_inplace_3_full(Element *begin, ElementCounter size) {
+            FE count[MAX_DIGIT_COUNT] = { 0 };
+            Element *pends[MAX_DIGIT_COUNT];
+            Element *pstarts[MAX_DIGIT_COUNT];
+            const FE shift = 16;
+            const FE num_digit = shift >> 3;
+            //Counting amounts
+            UNROL_LOOP(begin, size, num_digit, Digit*, dp, Element *arr_ptr = begin;, ++count[*dp]; dp += ELEMENT_SIZE;);
+            //Calculating places*/
+            UNROL_LOOP(0, MAX_DIGIT_COUNT, 0, FE, i, Element *q = begin;,
+                pstarts[i] = q; q += count[i]; pends[i++] = q;);
+            /*Sorting inplace - moving to ordered places*/ {
+                for (FE i = 0; i < MAX_DIGIT_COUNT; ++i) {
+                    while (pstarts[i] != pends[i]) {
+                        FE value = *pstarts[i];
+                        FE y = (value >> shift) & LOWER_DIGIT_MASK;
+                        while (i != y) {
+                            FE temp = *pstarts[y];
+                            *(pstarts[y]++) = value;
+                            value = temp;
+                            y = (value >> shift) & LOWER_DIGIT_MASK;
+                        }
+                        *(pstarts[i]++) = value;
+                    }
+                }
+            }
+            /*for each digit call subsort in LSB order*/ {
+                for (FE i = 0; i < MAX_DIGIT_COUNT; ++i) {
+                    ElementCounter sub_size = count[i];
+                    if (sub_size != 0) {// skipping empty buckets
+                        Element *pend = pends[i];
+                        Element *pstart = pend - sub_size;
+                        //LSB2(pstart, sub_size, buffer + (pstart - begin));
+                        if (sub_size > 16)
+                            MSB_inplace_2_full(pstart, sub_size);
+                        else
+                            InsertionSort(pstart, pend);
+                    }
+                }}
+        }
+
+
+        void MSB_inplace_3_extra(Element *begin, ElementCounter size) {
+            FE count[MAX_DIGIT_COUNT] = { 0 };
+            Element *pends[MAX_DIGIT_COUNT];
+            Element *pstarts[MAX_DIGIT_COUNT];
+            const FE size_trunc_8 = size & (~0 << 3);
+            const FE shift = 16;
+            const FE num_digit = shift >> 3;
+            /*Counting amounts*/ {
+                Digit* dp = (Digit*)(begin)+num_digit;
+                Digit* dend = (Digit*)(begin + size_trunc_8);
+                for (; dp < dend;) {
+                    ++count[*dp]; dp += ELEMENT_SIZE;
+                    ++count[*dp]; dp += ELEMENT_SIZE;
+                    ++count[*dp]; dp += ELEMENT_SIZE;
+                    ++count[*dp]; dp += ELEMENT_SIZE;
+                    ++count[*dp]; dp += ELEMENT_SIZE;
+                    ++count[*dp]; dp += ELEMENT_SIZE;
+                    ++count[*dp]; dp += ELEMENT_SIZE;
+                    ++count[*dp]; dp += ELEMENT_SIZE;
+                }
+                for (dp = (Digit*)(begin + size_trunc_8) + num_digit, dend = (Digit*)(begin + size); dp < dend;) {
+                    ++count[*dp]; dp += ELEMENT_SIZE;
+                }}
+            FE max_subsize = count[0];
+            ///*Calculating places*/ {
+            //    Element *q = begin;
+            //    FE c;
+            //    for (FE i = 0; i < MAX_DIGIT_COUNT;) {
+            //        pstarts[i] = q; c = count[i]; q += c; pends[i++] = q; max_subsize = c > max_subsize ? c : max_subsize;
+            //        pstarts[i] = q; c = count[i]; q += c; pends[i++] = q; max_subsize = c > max_subsize ? c : max_subsize;
+            //        pstarts[i] = q; c = count[i]; q += c; pends[i++] = q; max_subsize = c > max_subsize ? c : max_subsize;
+            //        pstarts[i] = q; c = count[i]; q += c; pends[i++] = q; max_subsize = c > max_subsize ? c : max_subsize;
+            //        pstarts[i] = q; c = count[i]; q += c; pends[i++] = q; max_subsize = c > max_subsize ? c : max_subsize;
+            //        pstarts[i] = q; c = count[i]; q += c; pends[i++] = q; max_subsize = c > max_subsize ? c : max_subsize;
+            //        pstarts[i] = q; c = count[i]; q += c; pends[i++] = q; max_subsize = c > max_subsize ? c : max_subsize;
+            //        pstarts[i] = q; c = count[i]; q += c; pends[i++] = q; max_subsize = c > max_subsize ? c : max_subsize;
+            //    }}
+            UNROL_LOOP(0, MAX_DIGIT_COUNT, 0, FE, i, Element *q = begin; FE c;,
+                pstarts[i] = q; c = count[i]; q += c; pends[i++] = q; max_subsize = c > max_subsize ? c : max_subsize;);
+            Element *buffer = (Element *)malloc(sizeof(Element) * max_subsize);
+            /*Sorting inplace - moving to ordered places*/ {
+                for (FE i = 0; i < MAX_DIGIT_COUNT; ++i) {
+                    while (pstarts[i] != pends[i]) {
+                        FE value = *pstarts[i];
+                        FE y = (value >> shift) & LOWER_DIGIT_MASK;
+                        while (i != y) {
+                            FE temp = *pstarts[y];
+                            *(pstarts[y]++) = value;
+                            value = temp;
+                            y = (value >> shift) & LOWER_DIGIT_MASK;
+                        }
+                        *(pstarts[i]++) = value;
+                    }
+                }
+            }
+            /*for each digit call subsort in LSB order*/ {
+                for (FE i = 0; i < MAX_DIGIT_COUNT; ++i) {
+                    ElementCounter sub_size = count[i];
+                    if (sub_size != 0) {// skipping empty buckets
+                        Element *pend = pends[i];
+                        Element *pstart = pend - sub_size;
+                        //LSB2(pstart, sub_size, buffer + (pstart - begin));
+                        LSB2(pstart, sub_size, buffer);
+                    }
+                }}
+            free(buffer);
+        }
+
+        void LSB2_sheet(Element *sub_begin, ElementCounter sub_size, Element *sub_buffer) {
+            FE size_trunc_8 = sub_size & (~0 << 3);
+            const Digit num_digits = 2;
+            // FE counts[num_digits][MAX_DIGIT_COUNT] = { 0 };
+            FE(&count0)[MAX_DIGIT_COUNT] = counts[0];
+            FE(&count1)[MAX_DIGIT_COUNT] = counts[1];
+            std::memset(count0, 0, sizeof(count0));
+            std::memset(count1, 0, sizeof(count1));
+            // Element *pends_arr[num_digits][MAX_DIGIT_COUNT];
+            /*Counting amounts*/ {
+                Digit *dp0 = (Digit*)(sub_begin), *dp1 = (Digit*)(sub_begin)+1;
+                Digit *dend = (Digit*)(sub_begin + size_trunc_8);
+                for (; dp0 < dend;) {
+                    ++count0[*dp0]; dp0 += ELEMENT_SIZE; ++count1[*dp1]; dp1 += ELEMENT_SIZE;
+                    ++count0[*dp0]; dp0 += ELEMENT_SIZE; ++count1[*dp1]; dp1 += ELEMENT_SIZE;
+                    ++count0[*dp0]; dp0 += ELEMENT_SIZE; ++count1[*dp1]; dp1 += ELEMENT_SIZE;
+                    ++count0[*dp0]; dp0 += ELEMENT_SIZE; ++count1[*dp1]; dp1 += ELEMENT_SIZE;
+                    ++count0[*dp0]; dp0 += ELEMENT_SIZE; ++count1[*dp1]; dp1 += ELEMENT_SIZE;
+                    ++count0[*dp0]; dp0 += ELEMENT_SIZE; ++count1[*dp1]; dp1 += ELEMENT_SIZE;
+                    ++count0[*dp0]; dp0 += ELEMENT_SIZE; ++count1[*dp1]; dp1 += ELEMENT_SIZE;
+                    ++count0[*dp0]; dp0 += ELEMENT_SIZE; ++count1[*dp1]; dp1 += ELEMENT_SIZE;
+                }
+                for (dend = (Digit*)(sub_begin + sub_size); dp0 < dend;) {
+                    ++count0[*dp0]; dp0 += ELEMENT_SIZE; ++count1[*dp1]; dp1 += ELEMENT_SIZE;
+                }
+            }
+            /*Calculating places*/ {
+                Element*(&pend0)[MAX_DIGIT_COUNT] = pends_arr[0];
+                Element*(&pend1)[MAX_DIGIT_COUNT] = pends_arr[1];
+                Element *q0 = sub_buffer; Element *q1 = sub_begin;
+                for (FE i = 0; i < MAX_DIGIT_COUNT; ) {
+                    pend0[i] = q0; q0 += count0[i]; pend1[i] = q1; q1 += count1[i++];
+                    pend0[i] = q0; q0 += count0[i]; pend1[i] = q1; q1 += count1[i++];
+                    pend0[i] = q0; q0 += count0[i]; pend1[i] = q1; q1 += count1[i++];
+                    pend0[i] = q0; q0 += count0[i]; pend1[i] = q1; q1 += count1[i++];
+                    pend0[i] = q0; q0 += count0[i]; pend1[i] = q1; q1 += count1[i++];
+                    pend0[i] = q0; q0 += count0[i]; pend1[i] = q1; q1 += count1[i++];
+                    pend0[i] = q0; q0 += count0[i]; pend1[i] = q1; q1 += count1[i++];
+                    pend0[i] = q0; q0 += count0[i]; pend1[i] = q1; q1 += count1[i++];
+                }}
+            //Sorting - moving to ordered places
+            Element *arr_ptr = sub_begin;
+            Element *arr_end = sub_begin + size_trunc_8;
+            Digit *dp = (Digit*)(sub_begin)+0;
+            {
+                Element*(&pend)[MAX_DIGIT_COUNT] = pends_arr[0];
+                for (; arr_ptr < arr_end;) {
+                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                }
+                for (arr_ptr = sub_begin + size_trunc_8, arr_end = sub_begin + sub_size; arr_ptr < arr_end;) {
+                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                }
+            }
+            Element *temp = sub_begin; sub_begin = sub_buffer; sub_buffer = temp;
+            arr_ptr = sub_begin;
+            arr_end = sub_begin + size_trunc_8;
+            dp = (Digit*)(sub_begin)+1;
+            {
+                Element*(&pend)[MAX_DIGIT_COUNT] = pends_arr[1];
+                for (; arr_ptr < arr_end;) {
+                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                }
+                for (arr_ptr = sub_begin + size_trunc_8, arr_end = sub_begin + sub_size; arr_ptr < arr_end;) {
+                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                }
+            }
+        }
+
+        void MSB_extra_mem_3_sheet(Element *msb_3_begin, ElementCounter msb_3_size, Element *msb_3_buffer) {
+            const FE DIGIT_AMOUNT = MAX_DIGIT_COUNT;
+             FE(&count)[DIGIT_AMOUNT] = counts[2];
+             std::memset(count, 0, sizeof(count));
+             Element*(&pends)[DIGIT_AMOUNT] = pends_arr[2];
+            //FE count[DIGIT_AMOUNT] = { 0 };
+            //Element *pends[DIGIT_AMOUNT];
+            const FE size_trunc_8 = msb_3_size & (~0 << 3);
+            const FE shift = 16;
+            const FE num_digit = shift >> 3;
+            /*Counting amounts*/
+            UNROL_LOOP(msb_3_begin, msb_3_size, num_digit, Digit*, dp, , ++count[*dp]; dp += ELEMENT_SIZE;);
+            /*Calculating places*/
+            UNROL_LOOP(0, DIGIT_AMOUNT, 0, FE, i, Element *q = msb_3_buffer; , pends[i] = q; q += count[i++]);
+            /*Sorting - moving to ordered places*/
+            UNROL_LOOP(msb_3_begin, msb_3_size, 0, Element*, arr_ptr, Digit *dp = (Digit*)(msb_3_begin)+num_digit;, *pends[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;);
+            /*for each digit call subsort*/ {
+                for (FE i = 0; i < MAX_DIGIT_COUNT; ++i) {
+                    ElementCounter sub_size = count[i];
+                    if (sub_size != 0) {// skipping empty buckets
+                        Element *pend = pends[i];
+                        Element *pstart = pend - sub_size;
+                        Element *sub_begin = pstart;
+                        Element *sub_buffer = msb_3_begin;
+                        //LSB2(pstart, sub_size, begin + (pstart - buffer));
+                        //LSB2(pstart, sub_size, begin);
+                        /*2 LSB steps inlined*/{
+                            FE size_trunc_8 = sub_size & (~0 << 3);
+                            const Digit num_digits = 2;
+                            // FE counts[num_digits][MAX_DIGIT_COUNT] = { 0 };
+                            FE(&count0)[MAX_DIGIT_COUNT] = counts[0];
+                            FE(&count1)[MAX_DIGIT_COUNT] = counts[1];
+                            std::memset(count0, 0, sizeof(count0));
+                            std::memset(count1, 0, sizeof(count1));
+                            // Element *pends_arr[num_digits][MAX_DIGIT_COUNT];
+                            /*Counting amounts*/ {
+                                Digit *dp0 = (Digit*)(sub_begin), *dp1 = (Digit*)(sub_begin)+1;
+                                Digit *dend = (Digit*)(sub_begin + size_trunc_8);
+                                for (; dp0 < dend;) {
+                                    ++count0[*dp0]; dp0 += ELEMENT_SIZE; ++count1[*dp1]; dp1 += ELEMENT_SIZE;
+                                    ++count0[*dp0]; dp0 += ELEMENT_SIZE; ++count1[*dp1]; dp1 += ELEMENT_SIZE;
+                                    ++count0[*dp0]; dp0 += ELEMENT_SIZE; ++count1[*dp1]; dp1 += ELEMENT_SIZE;
+                                    ++count0[*dp0]; dp0 += ELEMENT_SIZE; ++count1[*dp1]; dp1 += ELEMENT_SIZE;
+                                    ++count0[*dp0]; dp0 += ELEMENT_SIZE; ++count1[*dp1]; dp1 += ELEMENT_SIZE;
+                                    ++count0[*dp0]; dp0 += ELEMENT_SIZE; ++count1[*dp1]; dp1 += ELEMENT_SIZE;
+                                    ++count0[*dp0]; dp0 += ELEMENT_SIZE; ++count1[*dp1]; dp1 += ELEMENT_SIZE;
+                                    ++count0[*dp0]; dp0 += ELEMENT_SIZE; ++count1[*dp1]; dp1 += ELEMENT_SIZE;
+                                }
+                                for (dend = (Digit*)(sub_begin + sub_size); dp0 < dend;) {
+                                    ++count0[*dp0]; dp0 += ELEMENT_SIZE; ++count1[*dp1]; dp1 += ELEMENT_SIZE;
+                                }
+                            }
+                            /*Calculating places*/ {
+                                Element*(&pend0)[MAX_DIGIT_COUNT] = pends_arr[0];
+                                Element*(&pend1)[MAX_DIGIT_COUNT] = pends_arr[1];
+                                Element *q0 = sub_buffer; Element *q1 = sub_begin;
+                                for (FE i = 0; i < MAX_DIGIT_COUNT; ) {
+                                    pend0[i] = q0; q0 += count0[i]; pend1[i] = q1; q1 += count1[i++];
+                                    pend0[i] = q0; q0 += count0[i]; pend1[i] = q1; q1 += count1[i++];
+                                    pend0[i] = q0; q0 += count0[i]; pend1[i] = q1; q1 += count1[i++];
+                                    pend0[i] = q0; q0 += count0[i]; pend1[i] = q1; q1 += count1[i++];
+                                    pend0[i] = q0; q0 += count0[i]; pend1[i] = q1; q1 += count1[i++];
+                                    pend0[i] = q0; q0 += count0[i]; pend1[i] = q1; q1 += count1[i++];
+                                    pend0[i] = q0; q0 += count0[i]; pend1[i] = q1; q1 += count1[i++];
+                                    pend0[i] = q0; q0 += count0[i]; pend1[i] = q1; q1 += count1[i++];
+                                }}
+                            //Sorting - moving to ordered places
+                            Element *arr_ptr = sub_begin;
+                            Element *arr_end = sub_begin + size_trunc_8;
+                            Digit *dp = (Digit*)(sub_begin)+0;
+                            {
+                                Element*(&pend)[MAX_DIGIT_COUNT] = pends_arr[0];
+                                for (; arr_ptr < arr_end;) {
+                                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                                }
+                                for (arr_ptr = sub_begin + size_trunc_8, arr_end = sub_begin + sub_size; arr_ptr < arr_end;) {
+                                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                                }
+                            }
+                            Element *temp = sub_begin; sub_begin = sub_buffer; sub_buffer = temp;
+                            arr_ptr = sub_begin;
+                            arr_end = sub_begin + size_trunc_8;
+                            dp = (Digit*)(sub_begin)+1;
+                            {
+                                Element*(&pend)[MAX_DIGIT_COUNT] = pends_arr[1];
+                                for (; arr_ptr < arr_end;) {
+                                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                                }
+                                for (arr_ptr = sub_begin + size_trunc_8, arr_end = sub_begin + sub_size; arr_ptr < arr_end;) {
+                                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                                }
+                            }
+                        }
+                    }
+                }}
+        }
+
         void MSB_extra_mem_3(Element *begin, ElementCounter size, Element *buffer) {
             const FE DIGIT_AMOUNT = MAX_DIGIT_COUNT;
+            // FE(&count)[DIGIT_AMOUNT] = counts[2];
+            // std::memset(count, 0, sizeof(count));
+            // Element*(&pends)[DIGIT_AMOUNT] = pends_arr[2];
             FE count[DIGIT_AMOUNT] = { 0 };
             Element *pends[DIGIT_AMOUNT];
             const FE size_trunc_8 = size & (~0 << 3);
@@ -421,16 +851,17 @@ namespace made {
             /*Counting amounts*/
             UNROL_LOOP(begin, size, num_digit, Digit*, dp, , ++count[*dp]; dp += ELEMENT_SIZE;);
             /*Calculating places*/
-            UNROL_LOOP(0, DIGIT_AMOUNT, 0, FE, i, Element *q = buffer;, pends[i] = q; q += count[i++]);
+            UNROL_LOOP(0, DIGIT_AMOUNT, 0, FE, i, Element *q = buffer; , pends[i] = q; q += count[i++]);
             /*Sorting - moving to ordered places*/
-            UNROL_LOOP(begin, size, 0, Element*, arr_ptr, Digit *dp = (Digit*)(begin)+num_digit; , *pends[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;);
+            UNROL_LOOP(begin, size, 0, Element*, arr_ptr, Digit *dp = (Digit*)(begin)+num_digit;, *pends[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;);
             /*for each digit call subsort*/ {
                 for (FE i = 0; i < MAX_DIGIT_COUNT; ++i) {
                     ElementCounter sub_size = count[i];
                     if (sub_size != 0) {// skipping empty buckets
                         Element *pend = pends[i];
                         Element *pstart = pend - sub_size;
-                        LSB2(pstart, sub_size, begin + (pstart - buffer));
+                        //LSB2(pstart, sub_size, begin + (pstart - buffer));
+                        LSB2(pstart, sub_size, begin);
                     }
                 }}
         }
@@ -443,8 +874,7 @@ namespace made {
             if (size < L1_SIZE) {
                 const FE maxshift = (highest_bit >> 3) << 2;
                 //LSB from 0 to maxshift
-            }
-            else {
+            } else {
                 // MSB step. After step check
             }
             /*
@@ -452,49 +882,245 @@ namespace made {
             */
         }
 
-        void MSB_extra_mem_4(Element *begin, ElementCounter size, Element *buffer) {
+        void MSB_extra_mem_4_sheet(Element *begin, ElementCounter size, Element *buffer) {
             const FE DIGIT_AMOUNT = MAX_DIGIT_COUNT >> 2;
             FE count[DIGIT_AMOUNT] = { 0 };
             Element *pends[DIGIT_AMOUNT];
-            //const FE size_trunc_8 = size & (~0 << 3);
             const FE shift = 24;
             const FE num_digit = shift >> 3; // 3
-            FE max = *begin;
-            /*Counting amounts and getting maximum*/
-            UNROL_LOOP(begin, size, num_digit, Digit*, dp, Element *arr_ptr = begin; ,
-                ++count[*dp]; dp += ELEMENT_SIZE; max = *arr_ptr > max ? *arr_ptr : max; ++arr_ptr;);
-            /*Checking if we need to skip steps*/ {
-                decide_steps(size, max);
-                if (max < 1 << 16) {
-                    LSB2(begin, size, buffer);
-                    return;
-                }
-                else if (max < 1 << 24) {
-                    MSB_extra_mem_3(begin, size, buffer);
-                    memcpy(begin, buffer, size * 4);
-                    return;
-                }
-            }
+            /*Counting amounts*/
+            UNROL_LOOP(begin, size, num_digit, Digit*, dp, Element *arr_ptr = begin;, ++count[*dp]; dp += ELEMENT_SIZE;);
             //Calculating places
-            UNROL_LOOP(0, DIGIT_AMOUNT, 0, FE, i, Element *q = buffer;, pends[i] = q; q += count[i++]);
+            UNROL_LOOP(0, DIGIT_AMOUNT, 0, FE, i, Element *q = buffer; , pends[i] = q; q += count[i++]);
             //Sorting - moving to ordered places
-            UNROL_LOOP(begin, size, 0, Element*, arr_ptr, Digit *dp = (Digit*)(begin)+num_digit; , *pends[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;);
+            UNROL_LOOP(begin, size, 0, Element*, arr_ptr, Digit *dp = (Digit*)(begin)+num_digit;, *pends[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;);
             /*for each digit call subsort*/ {
                 for (FE i = 0; i < DIGIT_AMOUNT; ++i) {
                     ElementCounter sub_size = count[i];
                     if (sub_size != 0) {// skipping empty buckets
                         Element *pend = pends[i];
                         Element *pstart = pend - sub_size;
-                        MSB_extra_mem_3(pstart, sub_size, begin + (pstart - buffer));
+                        //MSB_extra_mem_3(pstart, sub_size, begin + (pstart - buffer));
+                        //MSB_extra_mem_3_sheet(pstart, sub_size, begin + (pstart - buffer));
+                        Element *msb_3_begin = pstart;
+                        ElementCounter msb_3_size = sub_size;
+                        Element *msb_3_buffer = begin + (pstart - buffer);
+                        /*inline MSB 3 step*/ {
+                            const FE DIGIT_AMOUNT = MAX_DIGIT_COUNT;
+                            FE(&count)[DIGIT_AMOUNT] = counts[2];
+                            std::memset(count, 0, sizeof(count));
+                            Element*(&pends)[DIGIT_AMOUNT] = pends_arr[2];
+                            //FE count[DIGIT_AMOUNT] = { 0 };
+                            //Element *pends[DIGIT_AMOUNT];
+                            const FE size_trunc_8 = msb_3_size & (~0 << 3);
+                            const FE shift = 16;
+                            const FE num_digit = shift >> 3;
+                            /*Counting amounts*/
+                            UNROL_LOOP(msb_3_begin, msb_3_size, num_digit, Digit*, dp, , ++count[*dp]; dp += ELEMENT_SIZE;);
+                            /*Calculating places*/
+                            UNROL_LOOP(0, DIGIT_AMOUNT, 0, FE, i, Element *q = msb_3_buffer; , pends[i] = q; q += count[i++]);
+                            /*Sorting - moving to ordered places*/
+                            UNROL_LOOP(msb_3_begin, msb_3_size, 0, Element*, arr_ptr, Digit *dp = (Digit*)(msb_3_begin)+num_digit;, *pends[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;);
+                            /*for each digit call subsort*/ {
+                                for (FE i = 0; i < MAX_DIGIT_COUNT; ++i) {
+                                    ElementCounter sub_size = count[i];
+                                    if (sub_size != 0) {// skipping empty buckets
+                                        Element *pend = pends[i];
+                                        Element *pstart = pend - sub_size;
+                                        Element *sub_begin = pstart;
+                                        Element *sub_buffer = msb_3_begin;
+                                        //LSB2(pstart, sub_size, begin + (pstart - buffer));
+                                        //LSB2(pstart, sub_size, begin);
+                                        /*2 LSB steps inlined*/{
+                                            FE size_trunc_8 = sub_size & (~0 << 3);
+                                            const Digit num_digits = 2;
+                                            // FE counts[num_digits][MAX_DIGIT_COUNT] = { 0 };
+                                            FE(&count0)[MAX_DIGIT_COUNT] = counts[0];
+                                            FE(&count1)[MAX_DIGIT_COUNT] = counts[1];
+                                            std::memset(count0, 0, sizeof(count0));
+                                            std::memset(count1, 0, sizeof(count1));
+                                            // Element *pends_arr[num_digits][MAX_DIGIT_COUNT];
+                                            /*Counting amounts*/ {
+                                                Digit *dp0 = (Digit*)(sub_begin), *dp1 = (Digit*)(sub_begin)+1;
+                                                Digit *dend = (Digit*)(sub_begin + size_trunc_8);
+                                                for (; dp0 < dend;) {
+                                                    ++count0[*dp0]; dp0 += ELEMENT_SIZE; ++count1[*dp1]; dp1 += ELEMENT_SIZE;
+                                                    ++count0[*dp0]; dp0 += ELEMENT_SIZE; ++count1[*dp1]; dp1 += ELEMENT_SIZE;
+                                                    ++count0[*dp0]; dp0 += ELEMENT_SIZE; ++count1[*dp1]; dp1 += ELEMENT_SIZE;
+                                                    ++count0[*dp0]; dp0 += ELEMENT_SIZE; ++count1[*dp1]; dp1 += ELEMENT_SIZE;
+                                                    ++count0[*dp0]; dp0 += ELEMENT_SIZE; ++count1[*dp1]; dp1 += ELEMENT_SIZE;
+                                                    ++count0[*dp0]; dp0 += ELEMENT_SIZE; ++count1[*dp1]; dp1 += ELEMENT_SIZE;
+                                                    ++count0[*dp0]; dp0 += ELEMENT_SIZE; ++count1[*dp1]; dp1 += ELEMENT_SIZE;
+                                                    ++count0[*dp0]; dp0 += ELEMENT_SIZE; ++count1[*dp1]; dp1 += ELEMENT_SIZE;
+                                                }
+                                                for (dend = (Digit*)(sub_begin + sub_size); dp0 < dend;) {
+                                                    ++count0[*dp0]; dp0 += ELEMENT_SIZE; ++count1[*dp1]; dp1 += ELEMENT_SIZE;
+                                                }
+                                            }
+                                            /*Calculating places*/ {
+                                                Element*(&pend0)[MAX_DIGIT_COUNT] = pends_arr[0];
+                                                Element*(&pend1)[MAX_DIGIT_COUNT] = pends_arr[1];
+                                                Element *q0 = sub_buffer; Element *q1 = sub_begin;
+                                                for (FE i = 0; i < MAX_DIGIT_COUNT; ) {
+                                                    pend0[i] = q0; q0 += count0[i]; pend1[i] = q1; q1 += count1[i++];
+                                                    pend0[i] = q0; q0 += count0[i]; pend1[i] = q1; q1 += count1[i++];
+                                                    pend0[i] = q0; q0 += count0[i]; pend1[i] = q1; q1 += count1[i++];
+                                                    pend0[i] = q0; q0 += count0[i]; pend1[i] = q1; q1 += count1[i++];
+                                                    pend0[i] = q0; q0 += count0[i]; pend1[i] = q1; q1 += count1[i++];
+                                                    pend0[i] = q0; q0 += count0[i]; pend1[i] = q1; q1 += count1[i++];
+                                                    pend0[i] = q0; q0 += count0[i]; pend1[i] = q1; q1 += count1[i++];
+                                                    pend0[i] = q0; q0 += count0[i]; pend1[i] = q1; q1 += count1[i++];
+                                                }}
+                                            //Sorting - moving to ordered places
+                                            Element *arr_ptr = sub_begin;
+                                            Element *arr_end = sub_begin + size_trunc_8;
+                                            Digit *dp = (Digit*)(sub_begin)+0;
+                                            {
+                                                Element*(&pend)[MAX_DIGIT_COUNT] = pends_arr[0];
+                                                for (; arr_ptr < arr_end;) {
+                                                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                                                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                                                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                                                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                                                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                                                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                                                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                                                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                                                }
+                                                for (arr_ptr = sub_begin + size_trunc_8, arr_end = sub_begin + sub_size; arr_ptr < arr_end;) {
+                                                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                                                }
+                                            }
+                                            Element *temp = sub_begin; sub_begin = sub_buffer; sub_buffer = temp;
+                                            arr_ptr = sub_begin;
+                                            arr_end = sub_begin + size_trunc_8;
+                                            dp = (Digit*)(sub_begin)+1;
+                                            {
+                                                Element*(&pend)[MAX_DIGIT_COUNT] = pends_arr[1];
+                                                for (; arr_ptr < arr_end;) {
+                                                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                                                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                                                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                                                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                                                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                                                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                                                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                                                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                                                }
+                                                for (arr_ptr = sub_begin + size_trunc_8, arr_end = sub_begin + sub_size; arr_ptr < arr_end;) {
+                                                    *pend[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }}
+                        }
+                    }
+                }}
+        }
+
+        void MSB_extra_mem_4(Element *begin, ElementCounter size, Element *buffer) {
+            const FE DIGIT_AMOUNT = MAX_DIGIT_COUNT >> 2;
+            FE count[DIGIT_AMOUNT] = { 0 };
+            Element *pends[DIGIT_AMOUNT];
+            // FE(&count)[MAX_DIGIT_COUNT] = counts[3];
+            // std::memset(count, 0, sizeof(count));
+            // Element*(&pends)[MAX_DIGIT_COUNT] = pends_arr[3];
+            //const FE size_trunc_8 = size & (~0 << 3);
+            const FE shift = 24;
+            const FE num_digit = shift >> 3; // 3
+            // FE max = *begin;
+            /*Counting amounts and getting maximum*/
+            // UNROL_LOOP(begin, size, num_digit, Digit*, dp, Element *arr_ptr = begin;,
+            //     ++count[*dp]; dp += ELEMENT_SIZE; max = *arr_ptr > max ? *arr_ptr : max; ++arr_ptr;);
+            UNROL_LOOP(begin, size, num_digit, Digit*, dp, Element *arr_ptr = begin;, ++count[*dp]; dp += ELEMENT_SIZE;);
+            // /*Checking if we need to skip steps*/ {
+            //     // decide_steps(size, max);
+            //     // if ((size > 8000000) && (size < 12000000) && (max < 1 << 24))
+            //     //         throw new std::exception();
+            //     // if ((size > 8000000) && (size < 12000000) && (max < 1 << 24))
+            //     //         throw new std::exception();
+            //     // if ((max < 1 << 8) && (size > 1000))
+            //     //     throw new std::exception();
+            //     if (max < 1 << 16) {
+            //         if ((size > 1000) && (size < 150000000))
+            //             throw new std::exception();
+            //         LSB2(begin, size, buffer);
+            //         return;
+            //     }
+            //     else if (max < 1 << 24) {
+            //         // if ((size > 50000) && (size < 5000000))
+            //         //     throw new std::exception();
+            //         MSB_extra_mem_3(begin, size, buffer);
+            //         memcpy(begin, buffer, size * 4);
+            //         return;
+            //     }
+            // }
+            //Calculating places
+            UNROL_LOOP(0, DIGIT_AMOUNT, 0, FE, i, Element *q = buffer; , pends[i] = q; q += count[i++]);
+            //Sorting - moving to ordered places
+            UNROL_LOOP(begin, size, 0, Element*, arr_ptr, Digit *dp = (Digit*)(begin)+num_digit;, *pends[*dp]++ = *arr_ptr++; dp += ELEMENT_SIZE;);
+            /*for each digit call subsort*/ {
+                for (FE i = 0; i < DIGIT_AMOUNT; ++i) {
+                    ElementCounter sub_size = count[i];
+                    if (sub_size != 0) {// skipping empty buckets
+                        Element *pend = pends[i];
+                        Element *pstart = pend - sub_size;
+                        //MSB_extra_mem_3(pstart, sub_size, begin + (pstart - buffer));
+                        MSB_extra_mem_3_sheet(pstart, sub_size, begin + (pstart - buffer));
                     }
                 }}
         }
 
         void k9_sort(Element *begin, ElementCounter size) {
+            //FE highest_bit = log2_32(size * 4) + 1;
+            //if (highest_bit < 9) {
+            //    Element *buffer = (Element *)malloc(sizeof(Element) * size);
+            //    LSB1(begin, size, buffer);
+            //    memcpy(begin, buffer, size * sizeof(Element));
+            //    free(buffer);
+            //} else if (highest_bit < 25) {
+            //    FE last_bits = (highest_bit & (~0 << 3)) - 1; // -1 just in case to not have too small buffer
+            //    FE size_decrease = 1 << last_bits;
+            //    FE small_size = size / size_decrease;
+            //    //Element *buffer = (Element *)malloc(sizeof(Element) * size);
+            //    //Element *buffer = (Element *)malloc(sizeof(Element) * small_size);
+            //    MSB_inplace_3(begin, size);
+            //    //MSB_extra_mem_3(begin, size, buffer);
+            //    //memcpy(begin, buffer, size * sizeof(Element));
+            //    //free(buffer);
+            //} else {
+            //    Element *buffer = (Element *)malloc(sizeof(Element) * size);
+            //    // bruteforce::MSB4(begin, size, buffer);// currently da best
+            //    MSB_extra_mem_4(begin, size, buffer);// currently da best
+            //    free(buffer);
+            //}
             Element *buffer = (Element *)malloc(sizeof(Element) * size);
-            MSB_extra_mem_4(begin, size, buffer);// currently da best
-            //memcpy(buffer, begin, size * sizeof(Element));
+            if (size < 1000) {
+                LSB1(begin, size, buffer);
+                memcpy(begin, buffer, size * sizeof(Element));
+            //} else if (highest_bit < 25) { MSB_inplace_3_extra(begin, size);
+            } else if (size < 12000000) {
+                //MSB_extra_mem_3(begin, size, buffer);
+                MSB_extra_mem_3_sheet(begin, size, buffer);
+                memcpy(begin, buffer, size * sizeof(Element));
+            } else {
+                // bruteforce::MSB4(begin, size, buffer);// currently da best
+                //MSB_extra_mem_4(begin, size, buffer);// currently da best
+                MSB_extra_mem_4_sheet(begin, size, buffer);// currently da best
+            }
             free(buffer);
+            //if (size < 1000) {
+            //    LSB_1(begin, size, buffer);
+            //    memcpy(begin, buffer, size * sizeof(Element));
+            //} else if (size < 12000000) {
+            //    MSB_extra_mem_3(begin, size, buffer);
+            //    memcpy(begin, buffer, size * sizeof(Element));
+            //} else {
+            //    // bruteforce::MSB4(begin, size, buffer);// currently da best
+            //    MSB_extra_mem_4(begin, size, buffer);// currently da best
+            //}
+            //memcpy(buffer, begin, size * sizeof(Element));
         }
     }
 
