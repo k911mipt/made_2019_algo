@@ -230,7 +230,6 @@ namespace made {
 
 
 using namespace made::stl;
-using val_t = size_t;
 
 using std::vector;
 using std::string;

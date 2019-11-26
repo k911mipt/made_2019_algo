@@ -61,7 +61,6 @@ i-ая проба g(k, i)=g(k, i-1) + i (mod m). m - степень двойки
 #include "hashtable.hpp"
 
 using namespace made::stl;
-using val_t = size_t;
 
 using std::vector;
 using std::string;
