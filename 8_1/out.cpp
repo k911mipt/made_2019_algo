@@ -247,8 +247,6 @@ int main() {
     char command = 0;
     string word;
     while (cin >> command >> word) {
-        if (word == "19")
-            assert(word == "19");
         switch (command) {
         case '+':
             cout << (table.Add(word) ? "OK" : "FAIL") << "\n";
