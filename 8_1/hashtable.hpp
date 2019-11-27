@@ -27,8 +27,12 @@ namespace made {
             static const uint INITIAL_SIZE = 8;
         public:
             HashTable(const H& _hasher) :
-                hasher_(_hasher), table_size_(INITIAL_SIZE), table_(INITIAL_SIZE, nullptr), key_count_(0), deleted_key_count_(0) {};
-            ~HashTable() { for (auto elem : table_) delete elem; }
+                hasher_(_hasher), 
+                table_size_(INITIAL_SIZE), 
+                table_(INITIAL_SIZE), 
+                key_count_(0), 
+                deleted_key_count_(0) {};
+            ~HashTable() = default;
 
             HashTable(const HashTable& t) = delete;
             HashTable& operator=(const HashTable& t) = delete;
@@ -39,19 +43,19 @@ namespace made {
         private:
             struct Element {
                 T key;
+                bool exists = false;
                 bool deleted = false;
-                Element(const T& _key) : key(_key) {}
             };
-            typedef std::function<void(Element*)> SeekEvent;
+            typedef std::function<void(Element*, size_t)> SeekEvent;
 
             H hasher_;
             size_t table_size_;
-            vector<Element*> table_;
+            vector<Element> table_;
             uint key_count_;
             uint deleted_key_count_;
 
             bool Seek(const T& key, SeekEvent&& cb);
-            void GrowTable();
+            void RehashTable();
             uint Probe(uint hash, uint i);
         };
 
@@ -59,41 +63,45 @@ namespace made {
         template<class T, class H>
         bool HashTable<T, H>::Add(const T& key) {
             if (key_count_ > table_size_ - (table_size_ >> 2)) {
-                GrowTable();
+                RehashTable();
             }
 
-            uint j = hasher_(key) % table_size_;
-            Element** elem = &table_[j];
-            Element** deleted_elem = nullptr;
-            for (uint i = 0; *elem && (i < table_size_); ++i) {
-                if ((*elem)->deleted)
+            uint index = hasher_(key) % table_size_;
+            Element* elem = &table_[index];
+            Element* deleted_elem = nullptr;
+            uint deleted_index = 0;
+            for (uint i = 0; elem->exists && (i < table_size_); ++i) {
+                if (elem->deleted)
                     deleted_elem = deleted_elem ? deleted_elem : elem;
-                else if ((*elem)->key == key)
+                else if (elem->key == key)
                     return false;
-                j = Probe(j, i);
-                elem = &table_[j];
+                index = Probe(index, i);
+                elem = &table_[index];
             }
 
             if (deleted_elem) {
+                assert(deleted_key_count_ > 0);
                 --deleted_key_count_;
-                delete *deleted_elem;
                 elem = deleted_elem;
             }
             else {
                 ++key_count_;
             }
-            *elem = new Element(key);
+
+            elem->deleted = false;
+            elem->exists = true;
+            elem->key = key;
             return true;
         }
 
         template<class T, class H>
         inline bool HashTable<T, H>::Has(const T& key) {
-            return Seek(key, [](Element* elem) {});
+            return Seek(key, [](Element*, size_t) {});
         }
 
         template<class T, class H>
         inline bool HashTable<T, H>::Delete(const T& key) {
-            return Seek(key, [this](Element* elem) {
+            return Seek(key, [this](Element* elem, size_t index) {
                 elem->deleted = true;
                 ++deleted_key_count_;
             });
@@ -102,20 +110,20 @@ namespace made {
         template<class T, class H>
         bool HashTable<T, H>::Seek(const T& key, SeekEvent&& cb) {
             uint index = hasher_(key) % table_size_;
-            Element* elem = table_[index];
-            for (uint i = 0; elem && (i < table_size_); ++i) {
+            Element* elem = &table_[index];
+            for (uint i = 0; elem->exists && (i < table_size_); ++i) {
                 if (!elem->deleted && (elem->key == key)) {
-                    cb(elem);
+                    cb(elem, index);
                     return true;
                 }
                 index = Probe(index, i);
-                elem = table_[index];
+                elem = &table_[index];
             }
             return false;
         }
 
         template<class T, class H>
-        void HashTable<T, H>::GrowTable() {
+        void HashTable<T, H>::RehashTable() {
             assert(key_count_ >= deleted_key_count_);
             uint actual_key_count = key_count_ - deleted_key_count_;
             assert(table_size_ < SIZE_MAX >> 1);
@@ -126,15 +134,13 @@ namespace made {
                 table_size_ /= 2;
             }
 
-            vector<Element*> newTable = std::move(table_);
-            table_ = vector<Element*>(table_size_, nullptr);
+            vector<Element> newTable = std::move(table_);
+            table_ = vector<Element>(table_size_);
             key_count_ = 0;
             deleted_key_count_ = 0;
             for (auto elem : newTable) {
-                if (elem && !elem->deleted) {
-                    Add(elem->key);
-                }
-                delete elem;
+                if (elem.exists && !elem.deleted)
+                    Add(elem.key);
             }
         }
 
