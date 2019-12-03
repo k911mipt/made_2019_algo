@@ -17,23 +17,14 @@
 
 #include <iostream>
 #include <fstream>
+#include "memcheck_crt.h"
 #include "binary_tree.h"
-
-#ifdef WINDOWS
-#define _CRTDBG_MAP_ALLOC
-#include <stdlib.h>
-#include <crtdbg.h>
-#endif
 
 using namespace made::stl;
 using val_t = int;
 
 int main() {
-#ifdef WINDOWS
-    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-    _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
-    _CrtSetReportFile(_CRT_WARN, _CRTDBG_FILE_STDOUT);
-#endif // WINDOWS
+    ENABLE_CRT;
     std::ifstream input_stream("input.txt");
     std::cin.rdbuf(input_stream.rdbuf());
     int n = 0;
@@ -46,11 +37,11 @@ int main() {
         tree.Insert(val);
     }
 
-    val_t* arr = new val_t[n];
-    tree.GetPreOrderValues(arr);
-    for (int i = 0; i < n; ++i) {
-        std::cout << arr[i] << " ";
+    std::vector<val_t> container;
+    tree.GetPreOrderValues(container);
+    for (auto elem : container) {
+        std::cout << elem << " ";
     }
-    delete(arr);
+
     return EXIT_SUCCESS;
 }
