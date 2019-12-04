@@ -101,10 +101,7 @@ namespace made {
         }
 
         inline BitsReader::operator bool() {
-            //if (it_ < last_)
-            //    return true;
-            //return (last_bits_count_ > 8 - bits_count_);
-            return it_ < last_ ? true : last_bits_count_ > 8 - bits_count_;
+            return it_ < last_ || last_bits_count_ > 8 - bits_count_;
         }
 
         inline void BitsReader::SetBuffer(std::vector<byte>&& buffer) {
