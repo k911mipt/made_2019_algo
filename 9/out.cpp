@@ -8,7 +8,6 @@
 #define HUFFMAN_ENCODER_H_
 
 #include <unordered_map>
-//#include <queue>
 #include <iostream>
 
 
@@ -21,16 +20,23 @@ namespace made {
 
     namespace stl {
         using byte = unsigned char;
+        inline constexpr byte operator "" _byte(unsigned long long arg) noexcept {
+            return static_cast<byte>(arg);
+        }
+
+        const byte STREAM_ENCODED_MASK = 0b00000001_byte;
+        const byte LAST_BITS_FILLED_MASK = 0b00001110_byte;
+        const byte LAST_BITS_START_POSITION = 1;
 
         class BitsWriter {
         public:
             void WriteBit(bool bit);
             void WriteByte(byte byte);
-            std::vector<unsigned char> GetResult();
+            std::vector<byte> GetResult();
         private:
-            std::vector<unsigned char> buffer_;
-            unsigned char accumulator_ = 0;
-            int bits_count_ = 0;
+            std::vector<byte> buffer_; 
+            byte accumulator_ = STREAM_ENCODED_MASK; // First bit indicates that stream is encoded
+            byte bits_count_ = 4;
         };
 
         void BitsWriter::WriteBit(bool bit) {
@@ -59,8 +65,8 @@ namespace made {
             if (bits_count_ != 0) {
                 // Добавляем в буфер аккумулятор, если в нем что-то есть.
                 buffer_.push_back(accumulator_);
+                buffer_.front() |= static_cast<byte>(bits_count_) << LAST_BITS_START_POSITION;
             }
-            buffer_.push_back(static_cast<unsigned char>(bits_count_));
             return std::move(buffer_);
         }
 
@@ -70,23 +76,25 @@ namespace made {
             bool ReadBit();
             byte ReadByte();
             operator bool();
-            void SetBuffer(std::vector<byte>&& buffer);
         private:
             std::vector<byte> buffer_;
             std::vector<byte>::iterator it_;
             std::vector<byte>::iterator last_;
             byte accumulator_ = 0;
-            int bits_count_ = 0;
-            int last_bits_count_ = 0;
-            int bytes_count_ = 0;
+            byte bits_count_ = 4;
+            byte last_bits_count_ = 0;
         };
 
         inline BitsReader::BitsReader(std::vector<byte>&& buffer) :
             buffer_(buffer),
             it_(buffer_.begin()),
-            last_(buffer_.end() - 1),
-            last_bits_count_(static_cast<int>(buffer_.back()))
-        {}
+            last_(buffer_.end()),
+            last_bits_count_((buffer_.front() & LAST_BITS_FILLED_MASK) >> LAST_BITS_START_POSITION)
+        {
+            accumulator_ = *it_++ >> bits_count_;
+            if (!last_bits_count_)
+                last_bits_count_ = 8;
+        }
 
         bool BitsReader::ReadBit() {
             if (bits_count_ == 0) {
@@ -114,16 +122,7 @@ namespace made {
         }
 
         inline BitsReader::operator bool() {
-            //if (it_ < last_)
-            //    return true;
-            //return (last_bits_count_ > 8 - bits_count_);
-            return it_ < last_ ? true : last_bits_count_ > 8 - bits_count_;
-        }
-
-        inline void BitsReader::SetBuffer(std::vector<byte>&& buffer) {
-            buffer_ = buffer;
-            it_ = buffer_.begin();
-            last_bits_count_ = static_cast<int>(buffer_.back());
+            return it_ < last_ || last_bits_count_ > 8 - bits_count_;
         }
     }
 }
@@ -272,6 +271,12 @@ namespace made {
 
     namespace huffman {
 
+        using made::stl::STREAM_ENCODED_MASK;
+        using made::stl::BitsReader;
+        using made::stl::BitsWriter;
+        
+        bool verbose = false;
+
         std::vector<byte> EncodeBytes(std::vector<byte>& input) {
             // Calculate frequences
             unsigned frequences[256] = { 0 };
@@ -305,15 +310,13 @@ namespace made {
                 }
             }
 
-            bool encoded = true;
             std::vector<byte> output = std::move(out.GetResult());
+            // When encoded sequence longer than source, cancel encoding.
+            // We still have to add a byte - signature of "not encoded"
             if (output.size() > input.size()) {
-                output = input;
-                encoded = false;
-                output.push_back(0);
+                output = std::move(input);
+                output.insert(output.begin(), 0);
             }
-            // put ENCODED flag into 4th bit of last byte
-            output.back() = output.back() | (encoded << 3);
             return output;
         }
 
@@ -327,32 +330,28 @@ namespace made {
                         node = bit ? node->right : node->left;
                     }
                     output.push_back(node->code);
-                    //std::cout << node->code;// << " ";
                 }
             }
             else {
                 while (in) {
                     in.ReadBit(); // TODO : optimize with getting stream size
                     output.push_back(root->code);
-                    //std::cout << root->code;
                 }
             }
             return output;
         }
 
         std::vector<byte> DecodeBytes(std::vector<byte>& input) {
-            bool encoded = (input.back() & 0x8) >> 3;
-            input.back() = input.back() & 0x7;
-
-            BitsReader in(std::move(input));
+            bool encoded = (input.front() & STREAM_ENCODED_MASK);
             if (encoded) {
+                BitsReader in(std::move(input));
                 Node* root = (new Node())->ReadTree(in);
                 std::vector<byte> output = DecodeTree(root, in);
                 root->Clear();
                 return output;
             }
             else {
-                input.pop_back();
+                input.erase(input.begin());
                 return input;
             }
         }
@@ -362,7 +361,6 @@ namespace made {
 #pragma endregion "huffman_encoder.h"
 
 
-using namespace made::stl;
 using byte = unsigned char;
 using Transformer = std::function<std::vector<byte>(std::vector<byte>&)>;
 

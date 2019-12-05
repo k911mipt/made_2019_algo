@@ -4,7 +4,6 @@
 
 #include <vector>
 #include <unordered_map>
-//#include <queue>
 #include <iostream>
 
 #include "bit_stream.h"
@@ -13,6 +12,12 @@
 namespace made {
 
     namespace huffman {
+
+        using made::stl::STREAM_ENCODED_MASK;
+        using made::stl::BitsReader;
+        using made::stl::BitsWriter;
+        
+        bool verbose = false;
 
         std::vector<byte> EncodeBytes(std::vector<byte>& input) {
             // Calculate frequences
@@ -47,15 +52,13 @@ namespace made {
                 }
             }
 
-            bool encoded = true;
             std::vector<byte> output = std::move(out.GetResult());
+            // When encoded sequence longer than source, cancel encoding.
+            // We still have to add a byte - signature of "not encoded"
             if (output.size() > input.size()) {
-                output = input;
-                encoded = false;
-                output.push_back(0);
+                output = std::move(input);
+                output.insert(output.begin(), 0);
             }
-            // put ENCODED flag into 4th bit of last byte
-            output.back() = output.back() | (encoded << 3);
             return output;
         }
 
@@ -69,32 +72,28 @@ namespace made {
                         node = bit ? node->right : node->left;
                     }
                     output.push_back(node->code);
-                    //std::cout << node->code;// << " ";
                 }
             }
             else {
                 while (in) {
                     in.ReadBit(); // TODO : optimize with getting stream size
                     output.push_back(root->code);
-                    //std::cout << root->code;
                 }
             }
             return output;
         }
 
         std::vector<byte> DecodeBytes(std::vector<byte>& input) {
-            bool encoded = (input.back() & 0x8) >> 3;
-            input.back() = input.back() & 0x7;
-
-            BitsReader in(std::move(input));
+            bool encoded = (input.front() & STREAM_ENCODED_MASK);
             if (encoded) {
+                BitsReader in(std::move(input));
                 Node* root = (new Node())->ReadTree(in);
                 std::vector<byte> output = DecodeTree(root, in);
                 root->Clear();
                 return output;
             }
             else {
-                input.pop_back();
+                input.erase(input.begin());
                 return input;
             }
         }

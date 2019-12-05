@@ -4,7 +4,6 @@
 #include "Huffman.h"
 #include "huffman_encoder.h"
 
-using namespace made::stl;
 using byte = unsigned char;
 using Transformer = std::function<std::vector<byte>(std::vector<byte>&)>;
 

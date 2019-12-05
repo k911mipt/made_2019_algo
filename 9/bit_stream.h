@@ -8,16 +8,23 @@ namespace made {
 
     namespace stl {
         using byte = unsigned char;
+        inline constexpr byte operator "" _byte(unsigned long long arg) noexcept {
+            return static_cast<byte>(arg);
+        }
+
+        const byte STREAM_ENCODED_MASK = 0b00000001_byte;
+        const byte LAST_BITS_FILLED_MASK = 0b00001110_byte;
+        const byte LAST_BITS_START_POSITION = 1;
 
         class BitsWriter {
         public:
             void WriteBit(bool bit);
             void WriteByte(byte byte);
-            std::vector<unsigned char> GetResult();
+            std::vector<byte> GetResult();
         private:
-            std::vector<unsigned char> buffer_;
-            unsigned char accumulator_ = 0;
-            int bits_count_ = 0;
+            std::vector<byte> buffer_; 
+            byte accumulator_ = STREAM_ENCODED_MASK; // First bit indicates that stream is encoded
+            byte bits_count_ = 4;
         };
 
         void BitsWriter::WriteBit(bool bit) {
@@ -46,8 +53,8 @@ namespace made {
             if (bits_count_ != 0) {
                 // Добавляем в буфер аккумулятор, если в нем что-то есть.
                 buffer_.push_back(accumulator_);
+                buffer_.front() |= static_cast<byte>(bits_count_) << LAST_BITS_START_POSITION;
             }
-            buffer_.push_back(static_cast<unsigned char>(bits_count_));
             return std::move(buffer_);
         }
 
@@ -57,23 +64,25 @@ namespace made {
             bool ReadBit();
             byte ReadByte();
             operator bool();
-            void SetBuffer(std::vector<byte>&& buffer);
         private:
             std::vector<byte> buffer_;
             std::vector<byte>::iterator it_;
             std::vector<byte>::iterator last_;
             byte accumulator_ = 0;
-            int bits_count_ = 0;
-            int last_bits_count_ = 0;
-            int bytes_count_ = 0;
+            byte bits_count_ = 4;
+            byte last_bits_count_ = 0;
         };
 
         inline BitsReader::BitsReader(std::vector<byte>&& buffer) :
             buffer_(buffer),
             it_(buffer_.begin()),
-            last_(buffer_.end() - 1),
-            last_bits_count_(static_cast<int>(buffer_.back()))
-        {}
+            last_(buffer_.end()),
+            last_bits_count_((buffer_.front() & LAST_BITS_FILLED_MASK) >> LAST_BITS_START_POSITION)
+        {
+            accumulator_ = *it_++ >> bits_count_;
+            if (!last_bits_count_)
+                last_bits_count_ = 8;
+        }
 
         bool BitsReader::ReadBit() {
             if (bits_count_ == 0) {
@@ -102,12 +111,6 @@ namespace made {
 
         inline BitsReader::operator bool() {
             return it_ < last_ || last_bits_count_ > 8 - bits_count_;
-        }
-
-        inline void BitsReader::SetBuffer(std::vector<byte>&& buffer) {
-            buffer_ = buffer;
-            it_ = buffer_.begin();
-            last_bits_count_ = static_cast<int>(buffer_.back());
         }
     }
 }
