@@ -26,51 +26,53 @@ struct Vertex {
 
 class Graph {
 private:
-    vector<Vertex> vertexes;
+    size_t size_;
+    vector<Vertex> vertexes_;
+    vector<size_t> dist_; // distance to start vertex
+    vector<size_t> prev_; // previously visited vertex. this is needed to avoid (1,0)-(0,1) loops
 public:
-    explicit Graph(size_t v_count) 
-        : vertexes(v_count) 
+    explicit Graph(size_t v_count)
+        : size_(v_count),
+        vertexes_(v_count),
+        dist_(v_count),
+        prev_(v_count)
     {
     }
     void AddEdge(size_t v1, size_t v2) {
-        vertexes[v1].AddNeighbour(v2);
-        vertexes[v2].AddNeighbour(v1);
+        vertexes_[v1].AddNeighbour(v2);
+        vertexes_[v2].AddNeighbour(v1);
     }
     int SearchForMinLoop() {
-        size_t cycle_dist = vertexes.size() + 1;
-        for (size_t i = 0; i < vertexes.size(); ++i) {
-            cycle_dist = std::min(SearchForLoopFromVertex(i), cycle_dist);
+        size_t cycle_dist = size_ + 1;
+        for (size_t i = 0; i < size_; ++i) {
+            cycle_dist = SearchForLoopFromVertex(i, cycle_dist);
         }
-        return static_cast<int>(cycle_dist > vertexes.size() ? -1 : cycle_dist);
+        return static_cast<int>(cycle_dist > size_ ? -1 : cycle_dist);
     }
-    size_t SearchForLoopFromVertex(size_t vstart) {
-        size_t size = vertexes.size();
-        size_t cycle_dist = size + 1;
-        vector<size_t> dist(size, size); // distance to start vertex
-        vector<size_t> prev(size, size); // previously visited vertex. this is needed to avoid (1,0)-(0,1) loops
-        dist[vstart] = 0;
+    size_t SearchForLoopFromVertex(size_t vstart, size_t cycle_dist) {
+        std::fill_n(dist_.begin(), size_, size_); // reset distances
+        dist_[vstart] = 0;
         queue<size_t> vqueue;
-        queue<size_t> temp_vqueue;
         vqueue.push(vstart);
         while (!vqueue.empty()) {
             size_t cur_v = vqueue.front(); vqueue.pop();
-            size_t cur_d = dist[cur_v];
+            size_t cur_d = dist_[cur_v];
             // no need to bfs more than half of vertexes. if there is a cycle, it will be found at other search iterations
-            if (cur_d * 2 > cycle_dist) { 
+            if (cur_d * 2 > cycle_dist) {
                 return cycle_dist;
             }
-            for (size_t neighbour : vertexes[cur_v].neighbours) {
+            for (size_t neighbour : vertexes_[cur_v].neighbours) {
                 // skipping vertexes from previous iteration
-                if (neighbour < vstart) { 
+                if (neighbour < vstart) {
                     continue;
                 }
-                if (dist[neighbour] == size) {
-                    dist[neighbour] = cur_d + 1;
+                if (dist_[neighbour] == size_) {
+                    dist_[neighbour] = cur_d + 1;
                     vqueue.push(neighbour);
-                    prev[neighbour] = cur_v;
+                    prev_[neighbour] = cur_v;
                 }
-                else if (prev[cur_v] != neighbour) {
-                    return cur_d + 1 + dist[neighbour];
+                else if (prev_[cur_v] != neighbour) {
+                    return std::min(cur_d + 1 + dist_[neighbour], cycle_dist);
                 }
             }
         }
