@@ -188,7 +188,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="binary_tree.h" />
+    <ClInclude Include="linalg.hpp" />
     <ClInclude Include="memcheck_crt.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

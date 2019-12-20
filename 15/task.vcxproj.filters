@@ -23,10 +23,10 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="binary_tree.h">
+    <ClInclude Include="memcheck_crt.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="memcheck_crt.h">
+    <ClInclude Include="linalg.hpp">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
